@@ -1,0 +1,56 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors / tooling
+.vscode/
+.idea/
+.claude/
+.playwright-mcp/
+.mcp.json
+
+# Environment (never commit real env)
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Research notes and planning (kept locally, not shipped)
+notes/
+memory/
+ADR.md
+DESIGN.md
+CLAUDE.md
+FRONTEND_STRUCTURE_GUIDE.md
+
+# Top-level research dossiers (local only)
+01_*.md
+02_*.md
+03_*.md
+04_*.md
+05_*.md
+06_*.md
+07_*.md
+08_*.md
+09_*.md
+1?_*.md
+
+# Screenshots / captures at repo root
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+
+# Runtime artifacts
+*.log
+*.pid
+
+# Node
+node_modules/
+
+# Local keypairs / secrets
+*.keypair.json
+keeper.json
+keypair.json
+.smoke-lut.json
