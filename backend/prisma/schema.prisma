@@ -1,0 +1,318 @@
+// Momentum backend Prisma schema.
+// Pooled `DATABASE_URL` + unpooled `DIRECT_URL` (required for migrations
+// per Prisma v7 + Neon/Supabase pgbouncer pattern).
+// Every domain table carries createdAt/updatedAt and destructive
+// operations use soft-delete (deletedAt) per project rules.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+// Prisma 7: connection URLs live in prisma.config.ts, not here.
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Preserved starter models
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  walletAddress String    @unique
+  nonce         String?
+  lastSignIn    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+
+  @@index([walletAddress])
+}
+
+model ErrorLog {
+  id         String   @id @default(cuid())
+  errorCode  String
+  message    String
+  statusCode Int
+  stack      String?  @db.Text
+  context    String?  @db.Text
+  userId     String?
+  method     String?
+  path       String?
+  userAgent  String?  @db.Text
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([errorCode])
+  @@index([createdAt])
+}
+
+// ============================================================
+// Auth / session
+// ============================================================
+
+/// SIWS nonce challenges. Single-use; expires quickly.
+model Session {
+  id         String    @id @default(cuid())
+  userId     String?
+  wallet     String
+  nonce      String    @unique
+  message    String    @db.Text
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([wallet])
+  @@index([expiresAt])
+}
+
+/// Singleton row (id = 1) holding the live TxLINE guest JWT + API token.
+/// `lastPacketAt` is bumped by the ingester on every consumed SSE packet so
+/// the HTTP process can derive `workers.ingester = live | stale | not_started`
+/// in /health without an IPC channel.
+model TxlineSession {
+  id            Int      @id @default(1)
+  jwt           String   @db.Text
+  apiToken      String   @db.Text
+  jwtExpiresAt  DateTime
+  lastPacketAt  DateTime?
+  ingesterStartedAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// Audit trail of every JWT rotation TxLINE forces on us.
+model TxlineJwt {
+  id           String   @id @default(cuid())
+  jwt          String   @db.Text
+  jwtExpiresAt DateTime
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ============================================================
+// TxODDS / fixtures + score packets
+// ============================================================
+
+model Fixture {
+  fixtureId     String   @id
+  competitionId String?
+  homeTeam      String
+  awayTeam      String
+  kickoffAt     DateTime?
+  statusId      Int?
+  period        Int?
+  raw           Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  scorePackets  ScorePacket[]
+  proofCaches   ProofCache[]
+
+  @@index([competitionId])
+  @@index([kickoffAt])
+  @@index([statusId])
+}
+
+/// Every TxLINE SSE packet, verbatim, keyed on (fixtureId, seq).
+model ScorePacket {
+  id         String   @id @default(cuid())
+  fixtureId  String
+  seq        Int
+  ts         BigInt?
+  action     String?
+  statusId   Int?
+  period     Int?
+  raw        Json
+  createdAt  DateTime @default(now())
+
+  fixture    Fixture  @relation(fields: [fixtureId], references: [fixtureId], onDelete: Cascade)
+
+  @@unique([fixtureId, seq])
+  @@index([fixtureId, createdAt])
+  @@index([action])
+}
+
+/// Cached `stat-validation-v3` proof payloads for replay/audit.
+model ProofCache {
+  id         String   @id @default(cuid())
+  fixtureId  String
+  seq        Int
+  statKey    String
+  payload    Json
+  capturedAt DateTime @default(now())
+
+  fixture    Fixture  @relation(fields: [fixtureId], references: [fixtureId], onDelete: Cascade)
+
+  @@unique([fixtureId, seq, statKey])
+  @@index([fixtureId, seq])
+}
+
+// ============================================================
+// Momentum on-chain mirrors
+// ============================================================
+
+model Group {
+  groupPda         String    @id
+  groupId          String    @unique
+  creator          String
+  name             String
+  maxSize          Int
+  currentSize      Int       @default(0)
+  entryFeeLamports BigInt    @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  memberships      Membership[]
+
+  @@index([creator])
+  @@index([deletedAt])
+}
+
+model Membership {
+  groupPda   String
+  userWallet String
+  joinedAt   DateTime @default(now())
+
+  group      Group    @relation(fields: [groupPda], references: [groupPda], onDelete: Cascade)
+
+  @@id([groupPda, userWallet])
+  @@index([userWallet])
+}
+
+model PredictionCard {
+  cardPda         String   @id
+  userWallet      String
+  fixtureId       String
+  slots           Json
+  slotCount       Int
+  matchCardMinted Boolean  @default(false)
+  submittedAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  stickers        StickerMint[]
+  matchCard       MatchCard?
+
+  @@unique([userWallet, fixtureId])
+  @@index([fixtureId])
+  @@index([userWallet])
+}
+
+model StickerMint {
+  id               String   @id @default(cuid())
+  cardPda          String
+  userWallet       String
+  fixtureId        String
+  slotIndex        Int
+  outcome          String   // "hit" | "miss" | "void"
+  stickerAssetSeq  BigInt?
+  assetId          String?
+  treeMerkle       String?
+  eventStatRoot    String?
+  proofTs          BigInt?
+  mintTxSig        String?
+  mintedAt         DateTime @default(now())
+
+  card             PredictionCard @relation(fields: [cardPda], references: [cardPda], onDelete: Cascade)
+
+  @@unique([cardPda, slotIndex])
+  @@index([userWallet])
+  @@index([fixtureId])
+  @@index([assetId])
+}
+
+model MatchCard {
+  id            String   @id @default(cuid())
+  cardPda       String   @unique
+  userWallet    String
+  fixtureId     String
+  assetId       String?
+  eventStatRoot String?
+  proofTs       BigInt?
+  mintTxSig     String?
+  mintedAt      DateTime @default(now())
+
+  card          PredictionCard @relation(fields: [cardPda], references: [cardPda], onDelete: Cascade)
+
+  @@index([userWallet])
+  @@index([fixtureId])
+}
+
+// ============================================================
+// Marketplace
+// ============================================================
+
+model Listing {
+  listingPda    String    @id
+  assetId       String    @unique
+  seller        String
+  priceLamports BigInt
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  sales         Sale[]
+
+  @@index([seller])
+  @@index([active])
+  @@index([deletedAt])
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  listingPda    String
+  assetId       String
+  seller        String
+  buyer         String
+  priceLamports BigInt
+  saleTxSig     String   @unique
+  soldAt        DateTime @default(now())
+
+  listing       Listing  @relation(fields: [listingPda], references: [listingPda], onDelete: Cascade)
+
+  @@index([buyer])
+  @@index([assetId])
+  @@index([seller])
+}
+
+// ============================================================
+// Settlement queue
+// ============================================================
+
+enum SettlementJobType {
+  settle
+  match_card
+}
+
+enum SettlementJobStatus {
+  pending
+  in_progress
+  done
+  error
+}
+
+model SettlementJob {
+  id         String              @id @default(cuid())
+  type       SettlementJobType
+  fixtureId  String
+  seq        Int?
+  statKey    String?
+  priority   Int                 @default(0)
+  status     SettlementJobStatus @default(pending)
+  attempts   Int                 @default(0)
+  lastError  String?             @db.Text
+  payload    Json?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@index([status, priority, createdAt])
+  @@index([fixtureId])
+}
