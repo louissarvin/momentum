@@ -1,0 +1,23 @@
+node_modules
+
+# Keep environment variables out of version control
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Prisma generated client
+prisma/generated
+
+# Local keypairs / secrets
+*.pem
+*.key
+keeper.json
+keypair.json
+.smoke-lut.json
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
