@@ -1,0 +1,3607 @@
+{
+  "address": "39oqYsjuQLkFLEieaP7tisN8Bq4K8A2fS2gttKaFwTAT",
+  "metadata": {
+    "name": "momentum",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "buy_card",
+      "discriminator": [
+        113,
+        142,
+        149,
+        246,
+        22,
+        115,
+        156,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "seller",
+          "writable": true
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "asset_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "log_wrapper",
+          "address": "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+        },
+        {
+          "name": "compression_program",
+          "address": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "asset_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "data_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creator_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "cancel_listing",
+      "discriminator": [
+        41,
+        183,
+        50,
+        232,
+        230,
+        233,
+        157,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "listing"
+          ]
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "asset_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "log_wrapper",
+          "address": "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+        },
+        {
+          "name": "compression_program",
+          "address": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "asset_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "data_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creator_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "claim_match_card",
+      "discriminator": [
+        33,
+        169,
+        133,
+        76,
+        3,
+        23,
+        231,
+        4
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "docs": [
+            "Permissionless keeper (payer for CU)."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user",
+          "relations": [
+            "prediction_card"
+          ]
+        },
+        {
+          "name": "prediction_card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "fixture_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "collection_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  108,
+                  108,
+                  101,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_auth",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "leaf_owner"
+        },
+        {
+          "name": "collection_mint"
+        },
+        {
+          "name": "collection_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  11,
+                  112,
+                  101,
+                  177,
+                  227,
+                  209,
+                  124,
+                  69,
+                  56,
+                  157,
+                  82,
+                  127,
+                  107,
+                  4,
+                  195,
+                  205,
+                  88,
+                  184,
+                  108,
+                  115,
+                  26,
+                  160,
+                  253,
+                  181,
+                  73,
+                  182,
+                  209,
+                  188,
+                  3,
+                  248,
+                  41,
+                  70
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "collection_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                11,
+                112,
+                101,
+                177,
+                227,
+                209,
+                124,
+                69,
+                56,
+                157,
+                82,
+                127,
+                107,
+                4,
+                195,
+                205,
+                88,
+                184,
+                108,
+                115,
+                26,
+                160,
+                253,
+                181,
+                73,
+                182,
+                209,
+                188,
+                3,
+                248,
+                41,
+                70
+              ]
+            }
+          }
+        },
+        {
+          "name": "collection_edition",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  11,
+                  112,
+                  101,
+                  177,
+                  227,
+                  209,
+                  124,
+                  69,
+                  56,
+                  157,
+                  82,
+                  127,
+                  107,
+                  4,
+                  195,
+                  205,
+                  88,
+                  184,
+                  108,
+                  115,
+                  26,
+                  160,
+                  253,
+                  181,
+                  73,
+                  182,
+                  209,
+                  188,
+                  3,
+                  248,
+                  41,
+                  70
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "collection_mint"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  100,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                11,
+                112,
+                101,
+                177,
+                227,
+                209,
+                124,
+                69,
+                56,
+                157,
+                82,
+                127,
+                107,
+                4,
+                195,
+                205,
+                88,
+                184,
+                108,
+                115,
+                26,
+                160,
+                253,
+                181,
+                73,
+                182,
+                209,
+                188,
+                3,
+                248,
+                41,
+                70
+              ]
+            }
+          }
+        },
+        {
+          "name": "bubblegum_signer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  108,
+                  108,
+                  101,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  99,
+                  112,
+                  105
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                152,
+                139,
+                128,
+                235,
+                121,
+                53,
+                40,
+                105,
+                178,
+                36,
+                116,
+                95,
+                89,
+                221,
+                191,
+                138,
+                38,
+                88,
+                202,
+                19,
+                220,
+                104,
+                129,
+                33,
+                38,
+                53,
+                28,
+                174,
+                7,
+                193,
+                165,
+                165
+              ]
+            }
+          }
+        },
+        {
+          "name": "log_wrapper",
+          "address": "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+        },
+        {
+          "name": "compression_program",
+          "address": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "txline_program",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        },
+        {
+          "name": "daily_scores_merkle_roots"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fixture_id",
+          "type": "i64"
+        },
+        {
+          "name": "ts",
+          "type": "i64"
+        },
+        {
+          "name": "fixture_summary",
+          "type": {
+            "defined": {
+              "name": "ScoresBatchSummary"
+            }
+          }
+        },
+        {
+          "name": "fixture_proof",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "ProofNode"
+              }
+            }
+          }
+        },
+        {
+          "name": "main_tree_proof",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "ProofNode"
+              }
+            }
+          }
+        },
+        {
+          "name": "predicate",
+          "type": {
+            "defined": {
+              "name": "TraderPredicate"
+            }
+          }
+        },
+        {
+          "name": "stat_a",
+          "type": {
+            "defined": {
+              "name": "StatTerm"
+            }
+          }
+        },
+        {
+          "name": "stat_b",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "StatTerm"
+              }
+            }
+          }
+        },
+        {
+          "name": "op",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "BinaryExpression"
+              }
+            }
+          }
+        },
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "create_group",
+      "discriminator": [
+        79,
+        60,
+        158,
+        134,
+        61,
+        199,
+        56,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "group",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "group_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator_membership",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "group_id",
+          "type": "u64"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "max_size",
+          "type": "u8"
+        },
+        {
+          "name": "entry_fee_lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "distribute_prize",
+      "discriminator": [
+        153,
+        175,
+        67,
+        111,
+        205,
+        207,
+        106,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "group",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "group_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "the runtime enforces owner-only mutation on data, and the vault has",
+            "no data (system-owned)."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              }
+            ]
+          }
+        },
+        {
+          "name": "group_extension",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112,
+                  95,
+                  101,
+                  120,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "group_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_collection_state",
+      "discriminator": [
+        180,
+        212,
+        237,
+        45,
+        139,
+        118,
+        86,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "collection_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  108,
+                  108,
+                  101,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "collection_mint",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "initialize_tree_state",
+      "discriminator": [
+        61,
+        37,
+        70,
+        72,
+        104,
+        99,
+        240,
+        39
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tree_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_auth",
+          "docs": [
+            "Not initialized here; seeds are verified via constraint."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tree",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "join_group",
+      "discriminator": [
+        121,
+        56,
+        199,
+        19,
+        250,
+        70,
+        44,
+        184
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "group",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "group_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "group_extension",
+          "docs": [
+            "Optional (Pass 10). If a client passes the `GroupExtension` PDA,",
+            "join is rejected when `paused = true`. Legacy clients that omit the",
+            "account skip the pause check entirely — non-breaking upgrade."
+          ],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112,
+                  95,
+                  101,
+                  120,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "group_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "list_for_sale",
+      "discriminator": [
+        188,
+        214,
+        1,
+        112,
+        93,
+        215,
+        124,
+        207
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "asset_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "log_wrapper",
+          "address": "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+        },
+        {
+          "name": "compression_program",
+          "address": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "price_lamports",
+          "type": "u64"
+        },
+        {
+          "name": "asset_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "data_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creator_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "pause_group",
+      "discriminator": [
+        99,
+        116,
+        17,
+        67,
+        185,
+        65,
+        65,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "address": "2QayNpSjEb5gZRRLBhP1yDk6oViSSfCdB2HWUYcxS2XV"
+        },
+        {
+          "name": "group",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "group_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "group_extension",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112,
+                  95,
+                  101,
+                  120,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "group_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_prediction",
+      "discriminator": [
+        201,
+        129,
+        177,
+        154,
+        16,
+        155,
+        48,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "docs": [
+            "Permissionless keeper. Pays CU and rent for tx."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user",
+          "relations": [
+            "prediction_card"
+          ]
+        },
+        {
+          "name": "prediction_card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "fixture_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  101,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "collection_state",
+          "docs": [
+            "Binds the mint to the on-chain Metaplex collection NFT so cNFTs land",
+            "in the \"MOMENTUM\" wallet group. Additive PDA per plan Q1 Option B."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  108,
+                  108,
+                  101,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_auth",
+          "docs": [
+            "delegate AND as collection authority (via invoke_signed)."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "leaf_owner"
+        },
+        {
+          "name": "collection_mint"
+        },
+        {
+          "name": "collection_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  11,
+                  112,
+                  101,
+                  177,
+                  227,
+                  209,
+                  124,
+                  69,
+                  56,
+                  157,
+                  82,
+                  127,
+                  107,
+                  4,
+                  195,
+                  205,
+                  88,
+                  184,
+                  108,
+                  115,
+                  26,
+                  160,
+                  253,
+                  181,
+                  73,
+                  182,
+                  209,
+                  188,
+                  3,
+                  248,
+                  41,
+                  70
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "collection_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                11,
+                112,
+                101,
+                177,
+                227,
+                209,
+                124,
+                69,
+                56,
+                157,
+                82,
+                127,
+                107,
+                4,
+                195,
+                205,
+                88,
+                184,
+                108,
+                115,
+                26,
+                160,
+                253,
+                181,
+                73,
+                182,
+                209,
+                188,
+                3,
+                248,
+                41,
+                70
+              ]
+            }
+          }
+        },
+        {
+          "name": "collection_edition",
+          "docs": [
+            "`[b\"metadata\", MPL_META_ID, mint, b\"edition\"]`."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  11,
+                  112,
+                  101,
+                  177,
+                  227,
+                  209,
+                  124,
+                  69,
+                  56,
+                  157,
+                  82,
+                  127,
+                  107,
+                  4,
+                  195,
+                  205,
+                  88,
+                  184,
+                  108,
+                  115,
+                  26,
+                  160,
+                  253,
+                  181,
+                  73,
+                  182,
+                  209,
+                  188,
+                  3,
+                  248,
+                  41,
+                  70
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "collection_mint"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  100,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                11,
+                112,
+                101,
+                177,
+                227,
+                209,
+                124,
+                69,
+                56,
+                157,
+                82,
+                127,
+                107,
+                4,
+                195,
+                205,
+                88,
+                184,
+                108,
+                115,
+                26,
+                160,
+                253,
+                181,
+                73,
+                182,
+                209,
+                188,
+                3,
+                248,
+                41,
+                70
+              ]
+            }
+          }
+        },
+        {
+          "name": "bubblegum_signer",
+          "docs": [
+            "under the Bubblegum program. Well-known helper PDA that Bubblegum uses",
+            "to CPI into Token Metadata's set_and_verify_collection."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  108,
+                  108,
+                  101,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  99,
+                  112,
+                  105
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                152,
+                139,
+                128,
+                235,
+                121,
+                53,
+                40,
+                105,
+                178,
+                36,
+                116,
+                95,
+                89,
+                221,
+                191,
+                138,
+                38,
+                88,
+                202,
+                19,
+                220,
+                104,
+                129,
+                33,
+                38,
+                53,
+                28,
+                174,
+                7,
+                193,
+                165,
+                165
+              ]
+            }
+          }
+        },
+        {
+          "name": "log_wrapper",
+          "address": "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+        },
+        {
+          "name": "compression_program",
+          "address": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "txline_program",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        },
+        {
+          "name": "daily_scores_merkle_roots",
+          "docs": [
+            "Seeds `[b\"daily_scores_roots\", u16_le(epoch_day)]` — day-scoped account,",
+            "TxLINE indexes into the 288 five-minute-slot roots inside using `ts`.",
+            "TxLINE re-derives + validates internally; wrong PDA -> `InvalidPda 6009`."
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fixture_id",
+          "type": "i64"
+        },
+        {
+          "name": "slot_index",
+          "type": "u8"
+        },
+        {
+          "name": "ts",
+          "type": "i64"
+        },
+        {
+          "name": "fixture_summary",
+          "type": {
+            "defined": {
+              "name": "ScoresBatchSummary"
+            }
+          }
+        },
+        {
+          "name": "fixture_proof",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "ProofNode"
+              }
+            }
+          }
+        },
+        {
+          "name": "main_tree_proof",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "ProofNode"
+              }
+            }
+          }
+        },
+        {
+          "name": "predicate",
+          "type": {
+            "defined": {
+              "name": "TraderPredicate"
+            }
+          }
+        },
+        {
+          "name": "stat_a",
+          "type": {
+            "defined": {
+              "name": "StatTerm"
+            }
+          }
+        },
+        {
+          "name": "stat_b",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "StatTerm"
+              }
+            }
+          }
+        },
+        {
+          "name": "op",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "BinaryExpression"
+              }
+            }
+          }
+        },
+        {
+          "name": "outcome_claim",
+          "type": "u8"
+        },
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "submit_predictions",
+      "discriminator": [
+        134,
+        168,
+        99,
+        180,
+        213,
+        11,
+        99,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "fixture_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fixture_id",
+          "type": "i64"
+        },
+        {
+          "name": "slots",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "PredictionSlotInput"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unpause_group",
+      "discriminator": [
+        253,
+        22,
+        7,
+        141,
+        42,
+        181,
+        94,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "address": "2QayNpSjEb5gZRRLBhP1yDk6oViSSfCdB2HWUYcxS2XV"
+        },
+        {
+          "name": "group",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "group_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "group_extension",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112,
+                  95,
+                  101,
+                  120,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "group"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "group_id",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CollectionState",
+      "discriminator": [
+        228,
+        135,
+        148,
+        4,
+        244,
+        41,
+        118,
+        165
+      ]
+    },
+    {
+      "name": "Group",
+      "discriminator": [
+        209,
+        249,
+        208,
+        63,
+        182,
+        89,
+        186,
+        254
+      ]
+    },
+    {
+      "name": "GroupExtension",
+      "discriminator": [
+        102,
+        247,
+        232,
+        53,
+        53,
+        44,
+        66,
+        50
+      ]
+    },
+    {
+      "name": "Listing",
+      "discriminator": [
+        218,
+        32,
+        50,
+        73,
+        43,
+        134,
+        26,
+        58
+      ]
+    },
+    {
+      "name": "Membership",
+      "discriminator": [
+        231,
+        141,
+        180,
+        98,
+        109,
+        168,
+        175,
+        166
+      ]
+    },
+    {
+      "name": "PredictionCard",
+      "discriminator": [
+        43,
+        48,
+        65,
+        166,
+        80,
+        1,
+        174,
+        85
+      ]
+    },
+    {
+      "name": "TreeState",
+      "discriminator": [
+        251,
+        163,
+        240,
+        50,
+        165,
+        217,
+        193,
+        100
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "Cancelled",
+      "discriminator": [
+        136,
+        23,
+        42,
+        65,
+        143,
+        233,
+        234,
+        46
+      ]
+    },
+    {
+      "name": "CollectionStateInitialized",
+      "discriminator": [
+        195,
+        97,
+        194,
+        51,
+        44,
+        221,
+        149,
+        68
+      ]
+    },
+    {
+      "name": "GroupCreated",
+      "discriminator": [
+        132,
+        94,
+        184,
+        198,
+        77,
+        165,
+        13,
+        26
+      ]
+    },
+    {
+      "name": "GroupPaused",
+      "discriminator": [
+        201,
+        42,
+        147,
+        163,
+        162,
+        140,
+        175,
+        191
+      ]
+    },
+    {
+      "name": "GroupUnpaused",
+      "discriminator": [
+        136,
+        36,
+        110,
+        191,
+        81,
+        55,
+        93,
+        103
+      ]
+    },
+    {
+      "name": "Listed",
+      "discriminator": [
+        243,
+        173,
+        136,
+        195,
+        125,
+        241,
+        12,
+        99
+      ]
+    },
+    {
+      "name": "MatchCardClaimed",
+      "discriminator": [
+        53,
+        178,
+        170,
+        219,
+        166,
+        173,
+        151,
+        114
+      ]
+    },
+    {
+      "name": "MemberJoined",
+      "discriminator": [
+        156,
+        199,
+        149,
+        88,
+        193,
+        203,
+        191,
+        210
+      ]
+    },
+    {
+      "name": "PredictionsSubmitted",
+      "discriminator": [
+        228,
+        54,
+        229,
+        5,
+        106,
+        26,
+        56,
+        25
+      ]
+    },
+    {
+      "name": "PrizeDistributed",
+      "discriminator": [
+        179,
+        47,
+        32,
+        60,
+        218,
+        107,
+        61,
+        198
+      ]
+    },
+    {
+      "name": "Sold",
+      "discriminator": [
+        205,
+        203,
+        210,
+        202,
+        96,
+        11,
+        192,
+        10
+      ]
+    },
+    {
+      "name": "StickerMinted",
+      "discriminator": [
+        228,
+        231,
+        167,
+        216,
+        59,
+        149,
+        126,
+        208
+      ]
+    },
+    {
+      "name": "TreeInitialized",
+      "discriminator": [
+        142,
+        88,
+        245,
+        170,
+        133,
+        42,
+        218,
+        233
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NameTooLong",
+      "msg": "Group name exceeds 32 bytes"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidGroupSize",
+      "msg": "Group max_size must be in 2..=12"
+    },
+    {
+      "code": 6002,
+      "name": "GroupFull",
+      "msg": "Group is already full"
+    },
+    {
+      "code": 6003,
+      "name": "DuplicateMember",
+      "msg": "Member is already in this group"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadySubmitted",
+      "msg": "Prediction card for this fixture already submitted"
+    },
+    {
+      "code": 6005,
+      "name": "TooManySlots",
+      "msg": "Slot count exceeds 8"
+    },
+    {
+      "code": 6006,
+      "name": "EmptySlots",
+      "msg": "Slots vector is empty"
+    },
+    {
+      "code": 6007,
+      "name": "SlotAlreadyResolved",
+      "msg": "Slot has already been resolved"
+    },
+    {
+      "code": 6008,
+      "name": "MatchCardAlreadyClaimed",
+      "msg": "Match card has already been claimed for this fixture"
+    },
+    {
+      "code": 6009,
+      "name": "ListingNotActive",
+      "msg": "Listing is not active"
+    },
+    {
+      "code": 6010,
+      "name": "NumericOverflow",
+      "msg": "Numeric overflow"
+    },
+    {
+      "code": 6011,
+      "name": "Unauthorized",
+      "msg": "Signer is not authorized for this action"
+    },
+    {
+      "code": 6012,
+      "name": "TreeMismatch",
+      "msg": "Provided merkle tree does not match TreeState.tree"
+    },
+    {
+      "code": 6013,
+      "name": "StatKeyMismatchLocal",
+      "msg": "stat_a.key / stat_b.key does not match the slot's stored stat key"
+    },
+    {
+      "code": 6014,
+      "name": "PredicateFieldMismatch",
+      "msg": "Provided predicate does not match the slot's stored predicate (HIT branch)"
+    },
+    {
+      "code": 6015,
+      "name": "MissingCompoundStat",
+      "msg": "Compound stat expected: stat_b is required but missing"
+    },
+    {
+      "code": 6016,
+      "name": "UnexpectedCompoundStat",
+      "msg": "Compound stat unexpected: stat_b was provided but slot is single-stat"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidStatBOp",
+      "msg": "Invalid stat_b op discriminant (must be 1=Add or 2=Subtract when set)"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidPrice",
+      "msg": "Listing price must be greater than zero"
+    },
+    {
+      "code": 6019,
+      "name": "BadSlotIndex",
+      "msg": "Slot index out of bounds (must be < slot_count and < 8)"
+    },
+    {
+      "code": 6020,
+      "name": "GroupPaused",
+      "msg": "Group is paused"
+    },
+    {
+      "code": 6021,
+      "name": "PrizeAlreadyDistributed",
+      "msg": "Prize has already been distributed for this group"
+    },
+    {
+      "code": 6022,
+      "name": "NoMembers",
+      "msg": "No members supplied for prize distribution"
+    },
+    {
+      "code": 6023,
+      "name": "ZeroTotalScore",
+      "msg": "Total member score is zero; cannot distribute proportionally"
+    },
+    {
+      "code": 6024,
+      "name": "MembershipGroupMismatch",
+      "msg": "Provided Membership account does not belong to this group"
+    },
+    {
+      "code": 6025,
+      "name": "GroupExtensionMismatch",
+      "msg": "Provided GroupExtension does not match the referenced Group PDA"
+    }
+  ],
+  "types": [
+    {
+      "name": "BinaryExpression",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Add"
+          },
+          {
+            "name": "Subtract"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Cancelled",
+      "docs": [
+        "Emitted after a seller cancels their own listing and the leaf_delegate is",
+        "restored back to the seller."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_id",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollectionState",
+      "docs": [
+        "One-time PDA at seeds `[b\"collection_state\"]`. Binds the deployed program",
+        "to a specific Metaplex Token Metadata collection NFT so `settle_prediction`",
+        "and `claim_match_card` can mint sticker + match cNFTs *into* that collection",
+        "via Bubblegum's `MintToCollectionV1`.",
+        "",
+        "This is Option B from `notes/collection-upgrade-plan.md` — additive PDA",
+        "rather than a `TreeState` schema change, so the upgrade is safe even though",
+        "`TreeState` is already initialized on devnet."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collection_mint",
+            "docs": [
+              "Metaplex NFT owned by `mint_auth`. See `scripts/create-collection.ts`."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Cached canonical bump so downstream ixs don't re-derive."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Whoever ran `initialize_collection_state`. Used for future rotate."
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollectionStateInitialized",
+      "docs": [
+        "Emitted once when the CollectionState PDA is initialized (admin-signed).",
+        "Frontends can subscribe once to learn the on-chain collection mint that",
+        "all future sticker + match-card cNFTs will be verified into."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "collection_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Comparison",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "GreaterThan"
+          },
+          {
+            "name": "LessThan"
+          },
+          {
+            "name": "EqualTo"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Group",
+      "docs": [
+        "User-created social group. `group_id` is stored as the first field so",
+        "clients can `getProgramAccounts({filters: [memcmp(offset=8, group_id)]})`",
+        "to enumerate a specific group by id (P-06)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group_id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "max_size",
+            "type": "u8"
+          },
+          {
+            "name": "current_size",
+            "type": "u8"
+          },
+          {
+            "name": "entry_fee_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "vault_bump",
+            "type": "u8"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Cached canonical PDA bump (P-04) — saves ~1.5K CU per reader ix."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GroupCreated",
+      "docs": [
+        "Emitted after a new social group PDA is created."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group_id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "max_size",
+            "type": "u8"
+          },
+          {
+            "name": "entry_fee_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "group_pda",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GroupExtension",
+      "docs": [
+        "Pass-10 additive PDA. Sidecar account attached to a `Group` for the new",
+        "admin/creator functionality (pause + prize distribution) without altering",
+        "the on-chain layout of the already-deployed `Group` account (which would",
+        "break every existing devnet group by breaking Borsh deserialize length).",
+        "",
+        "Seeds: `[b\"group_ext\", group.key().as_ref()]`.",
+        "",
+        "Created lazily on first `pause_group` / `unpause_group` / `distribute_prize`",
+        "call via `init_if_needed`. Legacy groups (created before Pass 10) simply",
+        "don't have an extension yet and behave exactly as they did before —",
+        "non-breaking upgrade."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group",
+            "docs": [
+              "Back-pointer to the parent Group PDA (defense-in-depth vs seed spoofing)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "Admin kill-switch. When true, `join_group` and `distribute_prize` reject."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "prize_distributed",
+            "docs": [
+              "Payout replay guard. When true, `distribute_prize` rejects."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Cached canonical PDA bump."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GroupPaused",
+      "docs": [
+        "Emitted after `pause_group` flips `GroupExtension.paused = true`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GroupUnpaused",
+      "docs": [
+        "Emitted after `unpause_group` flips `GroupExtension.paused = false`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Listed",
+      "docs": [
+        "Emitted after a sticker cNFT is listed for sale."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "price_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "tree",
+            "type": "pubkey"
+          },
+          {
+            "name": "leaf_index",
+            "type": "u32"
+          },
+          {
+            "name": "listing_pda",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Listing",
+      "docs": [
+        "Marketplace listing for a compressed sticker NFT.",
+        "`active` bool guards CEI ordering in `buy_card` / `cancel_listing`.",
+        "`bump` is the canonical PDA bump captured at init time so that later",
+        "instructions can re-derive the Listing PDA from the `asset_id` ix arg",
+        "(not from the potentially-attacker-supplied `listing.asset_id` field —",
+        "see code-review F-02)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "price_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "tree",
+            "type": "pubkey"
+          },
+          {
+            "name": "leaf_index",
+            "type": "u32"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MatchCardClaimed",
+      "docs": [
+        "Emitted after a fixture's summary \"match card\" cNFT is minted.",
+        "",
+        "See [`StickerMinted`] for the meaning of `event_stat_root`, `proof_ts`,",
+        "`asset_id`, `merkle_tree`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "match_card_seq",
+            "type": "u64"
+          },
+          {
+            "name": "event_stat_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proof_ts",
+            "type": "i64"
+          },
+          {
+            "name": "asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "merkle_tree",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MemberJoined",
+      "docs": [
+        "Emitted after a user joins a group (post current_size increment)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "current_size",
+            "type": "u8"
+          },
+          {
+            "name": "max_size",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Membership",
+      "docs": [
+        "Per-user group membership. Score tracks running hit count."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "joined_at",
+            "type": "i64"
+          },
+          {
+            "name": "score",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Cached canonical PDA bump (P-04)."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PredictionCard",
+      "docs": [
+        "User's prediction slate for a single fixture. Fixed 8-slot array",
+        "with `slot_count` denoting the actual used length.",
+        "",
+        "`match_card_event_stat_root` + `match_card_proof_ts` are populated by",
+        "`claim_match_card` from the successful TxLINE proof so every claim",
+        "deep-links back to a specific Merkle root + timestamp (proof lineage)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "submitted_at",
+            "type": "i64"
+          },
+          {
+            "name": "slots",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "PredictionSlot"
+                  }
+                },
+                8
+              ]
+            }
+          },
+          {
+            "name": "slot_count",
+            "type": "u8"
+          },
+          {
+            "name": "match_card_minted",
+            "type": "bool"
+          },
+          {
+            "name": "match_card_event_stat_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "match_card_proof_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Cached canonical PDA bump (P-04)."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PredictionSlot",
+      "docs": [
+        "A single stat prediction. Copy-friendly (fits in the fixed",
+        "`[PredictionSlot; 8]` array on PredictionCard).",
+        "",
+        "Field semantics:",
+        "- `stat_a_key` : ScoreStat.key for primary stat (must be > 0 to be valid)",
+        "- `stat_b_key` : 0 = compound not used; otherwise ScoreStat.key of second term",
+        "- `op`         : 0 = None, 1 = Add, 2 = Subtract (BinaryExpression mirror)",
+        "- `predicate_comparison` : 0 = GreaterThan, 1 = LessThan, 2 = EqualTo",
+        "(mirrors TxLINE `Comparison` enum ordinals)",
+        "- `threshold`  : Momentum-side threshold BEFORE any keeper negation",
+        "- `period`     : match period (e.g. 0 = full-time, 1 = 1st half, 2 = 2nd half)",
+        "- `status`     : SlotStatus discriminant (0 Pending, 1 Hit, 2 Miss)",
+        "- `sticker_asset_seq` : 0 until minted; then = TreeState.next_index at mint time",
+        "- `event_stat_root`   : `[0u8; 32]` until settled; then the `event_stat_root`",
+        "bytes captured from the TxLINE `StatTerm` (proof lineage)",
+        "- `proof_ts`          : 0 until settled; then the `ts` arg passed to TxLINE"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stat_a_key",
+            "type": "i32"
+          },
+          {
+            "name": "stat_b_key",
+            "type": "i32"
+          },
+          {
+            "name": "op",
+            "type": "u8"
+          },
+          {
+            "name": "predicate_comparison",
+            "type": "u8"
+          },
+          {
+            "name": "threshold",
+            "type": "i32"
+          },
+          {
+            "name": "period",
+            "type": "u16"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "sticker_asset_seq",
+            "type": "u64"
+          },
+          {
+            "name": "event_stat_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proof_ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PredictionSlotInput",
+      "docs": [
+        "Client-side input shape. Mirrored to `PredictionSlot` server-side with",
+        "`status = Pending` and `sticker_asset_seq = 0`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stat_a_key",
+            "type": "i32"
+          },
+          {
+            "name": "stat_b_key",
+            "type": "i32"
+          },
+          {
+            "name": "op",
+            "type": "u8"
+          },
+          {
+            "name": "predicate_comparison",
+            "type": "u8"
+          },
+          {
+            "name": "threshold",
+            "type": "i32"
+          },
+          {
+            "name": "period",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PredictionsSubmitted",
+      "docs": [
+        "Emitted after a user's prediction card is committed on-chain."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "slot_count",
+            "type": "u8"
+          },
+          {
+            "name": "card_pda",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PrizeDistributed",
+      "docs": [
+        "Emitted after a group's SOL vault has been proportionally distributed to",
+        "its members based on their `Membership.score`. Closes the F-19",
+        "trapped-SOL gap for fee-charging groups."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "caller",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "total_score",
+            "type": "u64"
+          },
+          {
+            "name": "member_count",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProofNode",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "is_right_sibling",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreStat",
+      "docs": [
+        "The on-chain representation of a single, provable key-value statistic.",
+        "This is the leaf of the inner-most Merkle tree."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "u32"
+          },
+          {
+            "name": "value",
+            "type": "i32"
+          },
+          {
+            "name": "period",
+            "type": "i32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoresBatchSummary",
+      "docs": [
+        "The summary for a single fixture's scores events within a 5-minute batch.",
+        "This contains the root of the sub-tree of all events for that fixture."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "update_stats",
+            "type": {
+              "defined": {
+                "name": "ScoresUpdateStats"
+              }
+            }
+          },
+          {
+            "name": "events_sub_tree_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoresUpdateStats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "update_count",
+            "type": "i32"
+          },
+          {
+            "name": "min_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "max_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sold",
+      "docs": [
+        "Emitted after a sticker cNFT is purchased and the Listing PDA is closed."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "price_lamports",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StatTerm",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stat_to_prove",
+            "type": {
+              "defined": {
+                "name": "ScoreStat"
+              }
+            }
+          },
+          {
+            "name": "event_stat_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "stat_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StickerMinted",
+      "docs": [
+        "Emitted after a slot is settled and its outcome sticker cNFT is minted.",
+        "",
+        "`outcome` mirrors `SlotStatus`: 1 = Hit, 2 = Miss.",
+        "`sticker_asset_seq` is the `TreeState.next_index` value captured at mint",
+        "time. Downstream indexers can pair this with the tree pubkey to derive the",
+        "Bubblegum asset id via `get_asset_id(tree, nonce)`.",
+        "",
+        "Proof lineage fields (`event_stat_root`, `proof_ts`) let a frontend deep-link",
+        "each minted sticker to the exact TxLINE Merkle root and 5-minute slot that",
+        "proved it — the sponsor's \"tamper-evident timestamp\" story made visible.",
+        "",
+        "`asset_id` and `merkle_tree` are included so any indexer can navigate from",
+        "a `StickerMinted` log directly to the DAS record without needing to know",
+        "how Bubblegum derives asset ids."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "slot_index",
+            "type": "u8"
+          },
+          {
+            "name": "outcome",
+            "type": "u8"
+          },
+          {
+            "name": "sticker_asset_seq",
+            "type": "u64"
+          },
+          {
+            "name": "event_stat_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proof_ts",
+            "type": "i64"
+          },
+          {
+            "name": "asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "merkle_tree",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TraderPredicate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "threshold",
+            "type": "i32"
+          },
+          {
+            "name": "comparison",
+            "type": {
+              "defined": {
+                "name": "Comparison"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreeInitialized",
+      "docs": [
+        "Emitted once (per program deploy) at `initialize_tree_state`. Lets any",
+        "frontend or indexer display \"MOMENTUM vN\" and bind the deployed program",
+        "to its Bubblegum tree + mint authority PDA without a second RPC roundtrip."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "tree",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_auth",
+            "type": "pubkey"
+          },
+          {
+            "name": "program_version",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreeState",
+      "docs": [
+        "One-time bootstrap PDA. Binds Momentum to a specific Bubblegum tree",
+        "and caches the mint-authority PDA bump."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tree",
+            "type": "pubkey"
+          },
+          {
+            "name": "next_index",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_auth_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}
