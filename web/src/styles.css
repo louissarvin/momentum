@@ -1,0 +1,482 @@
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+/* Enable class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Momentum design tokens (DESIGN.md §12.2) ─── */
+@theme {
+  /* Primary palette */
+  --color-ink-900: #0a0b0d;
+  --color-ink-800: #111318;
+  --color-ink-700: #1a1d24;
+  --color-cream-50: #f9f6ef;
+  --color-cream-100: #f1ecde;
+  --color-paper-0: #ffffff;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-sui-500: #4da2ff;
+
+  /* Neutrals */
+  --color-slate-400: #94969c;
+  --color-slate-500: #6e7079;
+  --color-slate-700: #3a3d45;
+
+  /* Semantic */
+  --color-success-500: #22c55e;
+  --color-error-500: #ef4444;
+  --color-warning-500: #f5c842;
+  --color-info-500: #4da2ff;
+
+  /* Category */
+  --color-cat-goals: #f97316;
+  --color-cat-cards: #f5c842;
+  --color-cat-corners: #3cd8d8;
+  --color-cat-shots: #8b5cf6;
+  --color-cat-poss: #22c55e;
+  --color-cat-other: #94969c;
+
+  /* Typography */
+  --font-sans:
+    'Bricolage Grotesque Variable', 'Inter', ui-sans-serif, system-ui,
+    -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas,
+    monospace;
+
+  /* Radius scale (DESIGN.md §5.1) */
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 40px;
+
+  /* Shadows — used sparingly per design principles */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glow-accent: 0 0 0 3px rgba(249, 115, 22, 0.2);
+
+  /* Custom animation definitions */
+  --animate-ellipsis-dots: ellipsis-dots 1.4s steps(3, end) infinite;
+  --animate-blob-morph: blob-morph 12s ease-in-out infinite alternate;
+  --animate-pixel-shimmer: pixel-shimmer 2s linear infinite;
+  --animate-live-pulse: live-pulse 1.6s ease-in-out infinite;
+  --animate-float: float 5s ease-in-out infinite alternate;
+}
+
+/* ─── Keyframes ─── */
+@keyframes ellipsis-dots {
+  0% {
+    content: '.';
+  }
+  33% {
+    content: '..';
+  }
+  66% {
+    content: '...';
+  }
+  100% {
+    content: '.';
+  }
+}
+
+@keyframes blob-morph {
+  0% {
+    border-radius: 44% 56% 63% 37% / 42% 46% 54% 58%;
+  }
+  50% {
+    border-radius: 58% 42% 37% 63% / 54% 42% 58% 46%;
+  }
+  100% {
+    border-radius: 44% 56% 63% 37% / 42% 46% 54% 58%;
+  }
+}
+
+@keyframes pixel-shimmer {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -32px 0;
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ─── Base ─── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Light theme: flip ink/cream tokens so all `bg-ink-*` and `text-cream-*`
+     Tailwind utilities across the app automatically invert — matches the
+     Lighthouse pattern of overriding tokens per-html-class. */
+  html.light {
+    background-color: #f9f6ef;
+    color: #0a0b0d;
+
+    --color-ink-900: #f9f6ef;
+    --color-ink-800: #f1ecde;
+    --color-ink-700: #e5e0d0;
+    --color-cream-50: #0a0b0d;
+    --color-cream-100: #1a1d24;
+    --color-paper-0: #0a0b0d;
+
+    --color-slate-400: #4a4d55;
+    --color-slate-500: #6b6e75;
+    --color-slate-700: #c2beb2;
+    --color-slate-600: #a09c90;
+  }
+
+  html.dark {
+    background-color: var(--color-ink-900);
+    color: var(--color-cream-50);
+  }
+
+  body {
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-sans);
+  }
+
+  code,
+  pre {
+    font-family: var(--font-mono);
+  }
+
+  /* Custom scrollbar — dark */
+  html.dark ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  html.dark ::-webkit-scrollbar-track {
+    background: var(--color-ink-900);
+  }
+
+  html.dark ::-webkit-scrollbar-thumb {
+    background: var(--color-slate-700);
+    border-radius: 3px;
+  }
+
+  html.dark ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-slate-500);
+  }
+
+  /* Custom scrollbar — light */
+  html.light ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  html.light ::-webkit-scrollbar-track {
+    background: var(--color-cream-50);
+  }
+
+  html.light ::-webkit-scrollbar-thumb {
+    background: var(--color-slate-400);
+    border-radius: 3px;
+  }
+}
+
+/* ─── Selection ─── */
+html.dark ::selection {
+  background: rgba(249, 115, 22, 0.25);
+  color: var(--color-cream-50);
+}
+
+html.light ::selection {
+  background: rgba(249, 115, 22, 0.18);
+  color: var(--color-ink-900);
+}
+
+/* ─── Pixel-art rendering ─── */
+img.pixel,
+.pixel img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* ─── Corner brackets (DESIGN.md §5.3) ─── */
+.corner-brackets {
+  position: relative;
+}
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+  opacity: 0.9;
+}
+.corner-brackets::before {
+  top: 8px;
+  left: 8px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+.corner-brackets::after {
+  bottom: 8px;
+  right: 8px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* 4-corner variant (legendary rarity + match card reveal) */
+.corner-brackets-4 {
+  position: relative;
+}
+.corner-brackets-4::before,
+.corner-brackets-4::after,
+.corner-brackets-4 > .cb-tr,
+.corner-brackets-4 > .cb-bl {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.corner-brackets-4::before {
+  top: 8px;
+  left: 8px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+.corner-brackets-4::after {
+  bottom: 8px;
+  right: 8px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+.corner-brackets-4 > .cb-tr {
+  top: 8px;
+  right: 8px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+.corner-brackets-4 > .cb-bl {
+  bottom: 8px;
+  left: 8px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+
+/* ─── Hero blob (DESIGN.md §5.2) ─── */
+.blob-hero {
+  border-radius: 44% 56% 63% 37% / 42% 46% 54% 58%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    #f97316 0%,
+    #ea580c 45%,
+    #7c2d12 100%
+  );
+  filter: blur(0.5px);
+  aspect-ratio: 1;
+  width: min(560px, 60vw);
+}
+
+/* ─── Live dot ─── */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--color-success-500);
+  animation: var(--animate-live-pulse);
+}
+
+/* ─── Mono tabular numerics ─── */
+.mono-tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* ─── Print stylesheet (W-6) ─── */
+@media print {
+  /* Hide chrome */
+  .no-print,
+  header,
+  nav,
+  footer,
+  [data-health-widget],
+  [data-dev-only] {
+    display: none !important;
+  }
+
+  /* Reset colors for readability */
+  html,
+  body,
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Preserve code blocks */
+  pre,
+  code {
+    background: #f5f5f5 !important;
+    color: #111 !important;
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 4px;
+  }
+
+  /* Show href after links */
+  a[href]::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.75em;
+    color: #555 !important;
+    word-break: break-all;
+  }
+
+  /* But not for internal fragment links or logo links */
+  a[href^='#']::after,
+  a[href^='javascript:']::after {
+    content: '' !important;
+  }
+
+  /* Page breaks before H2 sections */
+  h2 {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  h2:first-of-type {
+    page-break-before: avoid;
+    break-before: avoid;
+  }
+
+  /* Keep headings with content */
+  h1,
+  h2,
+  h3,
+  h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Avoid breaking inside code blocks and cards */
+  pre,
+  blockquote,
+  table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Hide interactive elements */
+  button,
+  [role='button'],
+  input,
+  select,
+  .no-print-btn {
+    display: none !important;
+  }
+
+  /* Max width for prose readability */
+  main,
+  .prose,
+  article {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Typography */
+  body {
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+  }
+
+  h1 {
+    font-size: 20pt !important;
+  }
+  h2 {
+    font-size: 16pt !important;
+  }
+  h3 {
+    font-size: 14pt !important;
+  }
+}
+
+/* ─── Focus ring (keyboard-only via :focus-visible) ─── */
+@layer utilities {
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--color-accent-500);
+    outline-offset: 2px;
+  }
+  .focus-ring:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* ─── View Transitions: theme swap ─── */
+@supports (view-transition-name: root) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+}
+
+/* ─── Pixel shimmer skeleton ─── */
+.pixel-shimmer {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 1px
+  );
+  background-size: 8px 8px;
+  animation: var(--animate-pixel-shimmer);
+}
+
+/* ─── Wallet adapter overrides ─── */
+.wallet-adapter-modal-wrapper {
+  background-color: var(--color-ink-800) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius-2xl) !important;
+}
+
+.wallet-adapter-button {
+  background-color: transparent !important;
+  border-radius: 9999px !important;
+  font-family: var(--font-sans) !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.wallet-adapter-modal-title {
+  color: var(--color-cream-50) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 700 !important;
+}
