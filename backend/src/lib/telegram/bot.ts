@@ -21,7 +21,13 @@ export type StickerOutcome = 'HIT' | 'MISS' | 'PENDING';
 export interface StickerCardOpts {
   name: string;
   outcome: StickerOutcome;
-  imageUrl: string; // absolute URL — never a local file stream
+  /**
+   * EITHER an absolute HTTPS URL OR provide `imageBuffer` for direct
+   * multipart upload. Buffer path is preferred when the renderer runs
+   * in-process (dev, no public URL, no tunnel).
+   */
+  imageUrl?: string;
+  imageBuffer?: Buffer;
   solscanUrl: string;
   fixtureLabel?: string; // e.g. "Argentina vs France · Final"
   slotLabel?: string; // e.g. "Slot 3 · Corners Over 8"
@@ -123,11 +129,17 @@ export async function pushStickerCard(
     logLine('warn', 'pushStickerCard: no chatId configured, skipping');
     return;
   }
-  if (!/^https:\/\//i.test(opts.imageUrl)) {
-    // Force HTTPS URL upload path — sidesteps any Bun stream-upload edge
-    // cases. If the caller only has an http:// URL, log + skip the image
-    // portion by falling through to sendMessage.
-    logLine('warn', 'pushStickerCard: imageUrl is not https, falling back to text', {
+  // Prefer direct Buffer upload (works from anywhere — no public URL
+  // needed). Only fall back to URL path when caller has a real hosted
+  // image (e.g. Helius DAS cdn_uri returning IPFS/Arweave content).
+  const usingBuffer = Boolean(opts.imageBuffer && opts.imageBuffer.length > 0);
+  const usingHttpsUrl = !usingBuffer && typeof opts.imageUrl === 'string' && /^https:\/\//i.test(opts.imageUrl);
+  const usingNothing = !usingBuffer && !usingHttpsUrl;
+
+  if (usingNothing) {
+    // No usable image source — send a text-only message so the
+    // notification still lands. Better than silent failure.
+    logLine('warn', 'pushStickerCard: no image source, sending text-only', {
       imageUrl: opts.imageUrl,
     });
     try {
@@ -144,7 +156,16 @@ export async function pushStickerCard(
   }
 
   try {
-    await bot.telegram.sendPhoto(chatId, opts.imageUrl, {
+    // Telegraf sendPhoto: `photo` accepts a string URL, a `{ source: Buffer | Readable }`,
+    // or a file_id. We use the source-buffer path when we generated the
+    // card in-process — this bypasses Telegram's need to fetch the URL
+    // (which fails for localhost + unresolvable METADATA_HOST domains).
+    // https://core.telegram.org/bots/api#sendphoto
+    const photo = usingBuffer
+      ? { source: opts.imageBuffer as Buffer, filename: 'momentum-card.png' }
+      : (opts.imageUrl as string);
+
+    await bot.telegram.sendPhoto(chatId, photo, {
       caption: renderCaption(opts),
       parse_mode: 'HTML',
       reply_markup: {
@@ -155,11 +176,13 @@ export async function pushStickerCard(
       chatId,
       name: opts.name,
       outcome: opts.outcome,
+      via: usingBuffer ? 'buffer' : 'url',
     });
   } catch (err) {
     logLine('error', 'sendPhoto failed', {
       err: (err as Error).message,
       chatId,
+      via: usingBuffer ? 'buffer' : 'url',
       imageUrl: opts.imageUrl,
     });
   }

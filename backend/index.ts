@@ -45,6 +45,7 @@ import { statsRoutes } from './src/routes/stats.ts';
 import { userRoutes } from './src/routes/users.ts';
 import { matchCardRoutes } from './src/routes/match-cards.ts';
 import { notifyRoutes } from './src/routes/notify.ts';
+import { telegramCardRoutes } from './src/routes/telegram-card.ts';
 
 // Workers
 import { startErrorLogCleanupWorker } from './src/workers/errorLogCleanup.ts';
@@ -258,6 +259,7 @@ function registerRoutes(): void {
   fastify.register(userRoutes, { prefix: '/api/users' });
   fastify.register(matchCardRoutes, { prefix: '/api/match-cards' });
   fastify.register(notifyRoutes, { prefix: '/api/notify' });
+  fastify.register(telegramCardRoutes, { prefix: '/api/telegram' });
   if (env.IS_DEV) {
     fastify.register(logsRoutes, { prefix: '/api/logs' });
   }

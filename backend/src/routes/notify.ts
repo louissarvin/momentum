@@ -30,6 +30,7 @@ import { env } from '../config/env.ts';
 import { prismaQuery } from '../lib/prisma.ts';
 import { getAsset, heliusAvailable } from '../lib/helius.ts';
 import type { StickerCardOpts, StickerOutcome } from '../lib/telegram/bot.ts';
+import { renderCardPng } from '../lib/telegram/card-image.ts';
 
 // ---------- helpers ----------
 
@@ -163,13 +164,27 @@ async function hydrate(
     body.solscanUrl ??
     solscanUrlForAssetOrTx({ assetId, txSig: body.txSig ?? mint?.mintTxSig ?? undefined });
 
+  // Prefer a real DAS image (set above via Helius) since that's the actual
+  // NFT artwork. Otherwise render a Momentum-branded card PNG in-process
+  // and hand it to the bot as a Buffer — direct upload, no public URL
+  // required, works from any dev machine without a tunnel.
+  let imageBuffer: Buffer | undefined;
   if (!imageUrl) {
-    // Still no image — bail (bot.pushStickerCard would just send text).
-    // Provide a minimal fallback that at least loads.
-    imageUrl = `${env.METADATA_HOST}/stickers/placeholder.png`;
+    try {
+      imageBuffer = renderCardPng({
+        name,
+        outcome,
+        fixtureLabel,
+        slotLabel,
+        assetId,
+        txSig: body.txSig ?? mint?.mintTxSig ?? undefined,
+      });
+    } catch {
+      /* renderer failed — pushStickerCard will fall back to text-only */
+    }
   }
 
-  return { name, outcome, imageUrl, solscanUrl, fixtureLabel, slotLabel };
+  return { name, outcome, imageUrl, imageBuffer, solscanUrl, fixtureLabel, slotLabel };
 }
 
 // ---------- plugin ----------

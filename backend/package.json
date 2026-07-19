@@ -42,6 +42,7 @@
     "@metaplex-foundation/umi-bundle-defaults": "^1.5.1",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@sentry/node": "^10.66.0",
     "@solana/spl-account-compression": "^0.4.1",
     "@solana/spl-token": "0.4.9",
