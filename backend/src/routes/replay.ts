@@ -17,16 +17,11 @@ export const replayRoutes: FastifyPluginCallback = (app: FastifyInstance, _opts,
       schema: {
         description: 'Replay worker status — active fixture, current seq, ETA.',
         tags: ['meta'],
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              error: { type: 'null' },
-              data: { type: ['object', 'null'] },
-            },
-          },
-        },
+        // No response schema on purpose. Fastify's fast-json-stringify
+        // strips any field not explicitly listed under `properties`; we want
+        // the full ReplayStatus shape (active, fixtureId, startedAt,
+        // processedPackets, speed, etc.) passed through verbatim so the
+        // frontend ReplayModeBanner can render correctly.
       },
     },
     async (_req: FastifyRequest, reply: FastifyReply) => {
