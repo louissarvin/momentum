@@ -1,33 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { cnm } from '@/utils/style'
-
-// Matches backend /health shape (backend/src/routes/health.ts).
-type WorkerStatus = 'live' | 'stale' | 'not_started' | string
-type TxlineAuthStatus = 'live' | 'expired' | 'not_initialized' | string
-
-interface HealthData {
-  status: string
-  version?: string
-  solana?: { cluster?: string; programId?: string; keeper?: string }
-  txlineAuth?: TxlineAuthStatus
-  txlineJwtValidHours?: number
-  workers?: {
-    ingester?: WorkerStatus
-    settler?: WorkerStatus
-    replay?: WorkerStatus
-  }
-  backlog?: {
-    pending?: number
-    inProgress?: number
-    errored?: number
-    doneLast24h?: number
-  }
-  marketplace?: {
-    activeListings?: number
-    salesLast24h?: number
-  }
-  replayMode?: { active?: boolean }
-}
+import { healthOptions } from '@/lib/api/endpoints'
+// HealthResponse type lives in `lib/api/types.ts` — single source of truth
+// shared with the endpoint client. Widget uses whatever `healthOptions()`
+// returns, so no local interface duplication needed.
 
 function Dot({ ok, pulse }: { ok: boolean; pulse?: boolean }) {
   return (
@@ -67,14 +43,15 @@ function Row({
 }
 
 export default function HealthWidget() {
-  const { data, isLoading, isError } = useQuery<HealthData>({
-    queryKey: ['health'],
-    queryFn: async () => {
-      const res = await fetch('http://localhost:3700/health')
-      if (!res.ok) throw new Error('unreachable')
-      return res.json() as Promise<HealthData>
-    },
+  // Uses the shared `apiFetch` client via `healthOptions()`:
+  //  - respects `env.VITE_API_URL` (works on Vercel + localhost + Railway)
+  //  - unwraps the `{success, error, data}` envelope (returns raw HealthResponse)
+  // Override the polling interval to 5s so the widget feels alive.
+  // No explicit generic — let TypeScript infer from healthOptions.
+  const { data, isLoading, isError } = useQuery({
+    ...healthOptions(),
     refetchInterval: 5_000,
+    staleTime: 4_000,
     retry: 1,
   })
 

@@ -227,6 +227,9 @@ export type HealthResponse = {
     poolSize: number | null
     activeConnections: number | null
   }
+  txlineAuth: 'not_initialized' | 'live' | 'expired' | string
+  txlineJwtValidHours: number | null
+  lastPacketMs: number | null
   workers: {
     ingester: string
     settler: string
@@ -241,6 +244,11 @@ export type HealthResponse = {
     doneLast24h: number
   }
   marketplace: { activeListings: number; salesLast24h: number }
+  stats?: {
+    totalPredictions: number
+    totalStickers: number
+    activeGroups: number
+  }
 }
 
 // SSE events
