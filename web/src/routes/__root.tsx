@@ -8,8 +8,10 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
+// TanStack devtools imports commented out to hide the floating logo for demo
+// recording. Restore with `git checkout web/src/routes/__root.tsx`.
+// import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+// import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import type { QueryClient } from '@tanstack/react-query'
 import HeroUIProvider from '@/providers/HeroUIProvider'
@@ -19,7 +21,7 @@ import SolanaProvider from '@/providers/SolanaProvider'
 import ErrorPage from '@/components/ErrorPage'
 import AppHeader from '@/components/AppHeader'
 
-import TanStackQueryDevtools from '@/integrations/tanstack-query/devtools'
+// import TanStackQueryDevtools from '@/integrations/tanstack-query/devtools'
 
 import AppFooter from '@/components/AppFooter'
 
@@ -102,18 +104,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <LenisSmoothScrollProvider />
             <ThemeProvider>
               {children}
-              {import.meta.env.DEV && (
-                <TanStackDevtools
-                  config={{ position: 'bottom-right' }}
-                  plugins={[
-                    {
-                      name: 'Tanstack Router',
-                      render: <TanStackRouterDevtoolsPanel />,
-                    },
-                    TanStackQueryDevtools,
-                  ]}
-                />
-              )}
+              {/* TanStack devtools hidden for demo recording — restore with `git checkout web/src/routes/__root.tsx` */}
             </ThemeProvider>
           </HeroUIProvider>
         </SolanaProvider>
