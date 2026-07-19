@@ -16,12 +16,27 @@
 import fp from 'fastify-plugin';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
+// Solana Actions / Blinks spec headers.
+//
+// `X-Action-Version` + `X-Blockchain-Ids` are REQUIRED for the wallet to accept
+// the response. Without `X-Blockchain-Ids` the wallet assumes mainnet-beta,
+// which will fail on our devnet-only deployment (CAIP-2 for devnet is
+// `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1`).
+//
+// `Access-Control-Expose-Headers` must include the two X-* headers so the
+// browser client can actually read them off the response object.
+const ACTION_VERSION = '2.1.3';
+const BLOCKCHAIN_IDS_DEVNET = 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1';
+
 const ACTIONS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
   'Access-Control-Allow-Headers':
     'Content-Type, Authorization, Content-Encoding, Accept-Encoding',
-  'Access-Control-Expose-Headers': 'Content-Type, Content-Encoding, Content-Length',
+  'Access-Control-Expose-Headers':
+    'Content-Type, Content-Encoding, Content-Length, X-Action-Version, X-Blockchain-Ids',
+  'X-Action-Version': ACTION_VERSION,
+  'X-Blockchain-Ids': BLOCKCHAIN_IDS_DEVNET,
 };
 
 function matchesActionsPath(url: string): boolean {
