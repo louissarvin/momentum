@@ -212,45 +212,54 @@ export const healthRoutes: FastifyPluginCallback = (app: FastifyInstance, _opts,
         // ignore
       }
 
+      // Enveloped in {success, error, data} to match the rest of the API.
+      // The frontend's `apiFetch` always unwraps `data` — this was the
+      // source of the "Backend offline" widget bug on Vercel. Docker /
+      // Railway healthchecks still work fine since they only look at
+      // HTTP status code, not response body shape.
       return reply.code(200).send({
-        status: 'ok',
-        uptimeMs: Date.now() - bootTime,
-        commit: process.env.GIT_COMMIT ?? 'unknown',
-        version: VERSION,
-        replayMode,
-        flags,
-        solana: {
-          cluster: env.SOLANA_CLUSTER,
-          programId: sol?.momentum.programId.toBase58() ?? env.MOMENTUM_PROGRAM_ID,
-          keeper: sol?.keeper.publicKey.toBase58() ?? null,
-          keeperBalanceSol,
+        success: true,
+        error: null,
+        data: {
+          status: 'ok',
+          uptimeMs: Date.now() - bootTime,
+          commit: process.env.GIT_COMMIT ?? 'unknown',
+          version: VERSION,
+          replayMode,
+          flags,
+          solana: {
+            cluster: env.SOLANA_CLUSTER,
+            programId: sol?.momentum.programId.toBase58() ?? env.MOMENTUM_PROGRAM_ID,
+            keeper: sol?.keeper.publicKey.toBase58() ?? null,
+            keeperBalanceSol,
+          },
+          prisma: {
+            connected: prismaConnected,
+            poolSize,
+            activeConnections,
+          },
+          txlineAuth,
+          txlineJwtValidHours,
+          lastPacketMs,
+          workers: {
+            ingester: ingesterStatus,
+            settler: settlerStatus,
+            replay: replayWorkerStatus,
+            settlerLastTickMs,
+            settlerLastJobId,
+          },
+          backlog: {
+            pending: backlogPending,
+            inProgress: backlogInProgress,
+            errored: backlogErrored24h,
+            doneLast24h: backlogDoneLast24h,
+          },
+          marketplace: {
+            activeListings: marketplaceActive,
+            salesLast24h: marketplaceSales24h,
+          },
+          stats: liveStats ?? { totalPredictions: 0, totalStickers: 0, activeGroups: 0 },
         },
-        prisma: {
-          connected: prismaConnected,
-          poolSize,
-          activeConnections,
-        },
-        txlineAuth,
-        txlineJwtValidHours,
-        lastPacketMs,
-        workers: {
-          ingester: ingesterStatus,
-          settler: settlerStatus,
-          replay: replayWorkerStatus,
-          settlerLastTickMs,
-          settlerLastJobId,
-        },
-        backlog: {
-          pending: backlogPending,
-          inProgress: backlogInProgress,
-          errored: backlogErrored24h,
-          doneLast24h: backlogDoneLast24h,
-        },
-        marketplace: {
-          activeListings: marketplaceActive,
-          salesLast24h: marketplaceSales24h,
-        },
-        stats: liveStats ?? { totalPredictions: 0, totalStickers: 0, activeGroups: 0 },
       });
     },
   );
