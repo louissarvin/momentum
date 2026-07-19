@@ -173,95 +173,178 @@ function CreateGroupModal({
     }
   }
 
+  const entryFeeNum = Number(entryFeeSol) || 0
+  const maxSizeNum = Number(maxSize) || 0
+
   return (
     <>
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
+        size="md"
+        backdrop="blur"
+        placement="center"
         classNames={{
-          base: 'bg-ink-800 border border-white/[0.08] rounded-[var(--radius-2xl)]',
-          header:
-            'text-cream-50 font-semibold text-lg border-b border-white/[0.06]',
-          body: 'text-slate-400',
-          closeButton: 'text-slate-400 hover:text-cream-50',
+          base: 'bg-ink-800 border border-white/[0.08] rounded-[var(--radius-2xl)] mx-4 max-w-[480px]',
+          header: 'px-6 pt-6 pb-0 border-b-0',
+          body: 'px-6 py-6',
+          footer: 'px-6 py-4 border-t border-white/[0.06] bg-ink-900/40',
+          closeButton:
+            'top-4 right-4 text-slate-500 hover:text-cream-50 hover:bg-white/[0.06] rounded-full transition-colors',
         }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Create a group</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1.5">
+                <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-accent-500">
+                  New group
+                </p>
+                <h2 className="text-cream-50 font-bold text-2xl tracking-tight">
+                  Create a group
+                </h2>
+                <p className="text-slate-400 text-sm font-normal leading-relaxed">
+                  Invite friends. Compete on prediction accuracy. Winner takes the pot.
+                </p>
+              </ModalHeader>
+
               <ModalBody>
-                <div className="space-y-4 py-2">
-                  <Input
-                    label="Group name"
-                    placeholder="The Lads"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    maxLength={32}
-                    isInvalid={!!errors.name}
-                    errorMessage={errors.name}
-                    classNames={{
-                      input: 'bg-transparent text-cream-50',
-                      inputWrapper:
-                        'h-11 bg-transparent border border-white/[0.12] rounded-[var(--radius-md)] hover:border-accent-500/60 data-[focus=true]:border-accent-500 data-[focus=true]:shadow-[0_0_0_3px_rgba(249,115,22,0.2)]',
-                      label:
-                        'text-slate-400 text-xs font-mono uppercase tracking-widest',
-                    }}
-                  />
-                  <Input
-                    label="Max members"
-                    placeholder="10"
-                    type="number"
-                    min={2}
-                    max={64}
-                    value={maxSize}
-                    onChange={(e) => setMaxSize(e.target.value)}
-                    isInvalid={!!errors.maxSize}
-                    errorMessage={errors.maxSize}
-                    classNames={{
-                      input: 'bg-transparent text-cream-50 font-mono',
-                      inputWrapper:
-                        'h-11 bg-transparent border border-white/[0.12] rounded-[var(--radius-md)] hover:border-accent-500/60 data-[focus=true]:border-accent-500 data-[focus=true]:shadow-[0_0_0_3px_rgba(249,115,22,0.2)]',
-                      label:
-                        'text-slate-400 text-xs font-mono uppercase tracking-widest',
-                    }}
-                  />
-                  <Input
-                    label="Entry fee (SOL)"
-                    placeholder="0"
-                    type="number"
-                    min={0}
-                    step={0.001}
-                    value={entryFeeSol}
-                    onChange={(e) => setEntryFeeSol(e.target.value)}
-                    isInvalid={!!errors.entryFeeSol}
-                    errorMessage={errors.entryFeeSol}
-                    classNames={{
-                      input: 'bg-transparent text-cream-50 font-mono',
-                      inputWrapper:
-                        'h-11 bg-transparent border border-white/[0.12] rounded-[var(--radius-md)] hover:border-accent-500/60 data-[focus=true]:border-accent-500 data-[focus=true]:shadow-[0_0_0_3px_rgba(249,115,22,0.2)]',
-                      label:
-                        'text-slate-400 text-xs font-mono uppercase tracking-widest',
-                    }}
-                  />
+                <div className="space-y-5">
+                  {/* Group name */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="group-name"
+                      className="block text-[11px] font-mono uppercase tracking-[0.14em] text-slate-500"
+                    >
+                      Group name
+                    </label>
+                    <Input
+                      id="group-name"
+                      placeholder="The Lads · Torino Ultras · Bola Nusantara"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      maxLength={32}
+                      isInvalid={!!errors.name}
+                      errorMessage={errors.name}
+                      classNames={{
+                        input:
+                          'bg-transparent text-cream-50 text-sm placeholder:text-slate-600',
+                        inputWrapper:
+                          'h-12 px-4 bg-ink-900/60 border border-white/[0.08] rounded-[var(--radius-md)] hover:border-white/[0.16] data-[focus=true]:border-accent-500 data-[focus=true]:shadow-[0_0_0_3px_rgba(249,115,22,0.15)] transition-all',
+                        errorMessage: 'text-xs text-error-500 mt-1',
+                      }}
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      {name.length}/32 characters
+                    </p>
+                  </div>
+
+                  {/* Max members + Entry fee (2-col grid) */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="group-max"
+                        className="block text-[11px] font-mono uppercase tracking-[0.14em] text-slate-500"
+                      >
+                        Max members
+                      </label>
+                      <Input
+                        id="group-max"
+                        placeholder="10"
+                        type="number"
+                        min={2}
+                        max={64}
+                        value={maxSize}
+                        onChange={(e) => setMaxSize(e.target.value)}
+                        isInvalid={!!errors.maxSize}
+                        errorMessage={errors.maxSize}
+                        endContent={
+                          <span className="text-[11px] font-mono text-slate-500 whitespace-nowrap">
+                            people
+                          </span>
+                        }
+                        classNames={{
+                          input:
+                            'bg-transparent text-cream-50 text-sm font-mono placeholder:text-slate-600',
+                          inputWrapper:
+                            'h-12 px-4 bg-ink-900/60 border border-white/[0.08] rounded-[var(--radius-md)] hover:border-white/[0.16] data-[focus=true]:border-accent-500 data-[focus=true]:shadow-[0_0_0_3px_rgba(249,115,22,0.15)] transition-all',
+                          errorMessage: 'text-xs text-error-500 mt-1',
+                        }}
+                      />
+                      <p className="text-[11px] text-slate-500">
+                        2 to 64
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="group-fee"
+                        className="block text-[11px] font-mono uppercase tracking-[0.14em] text-slate-500"
+                      >
+                        Entry fee
+                      </label>
+                      <Input
+                        id="group-fee"
+                        placeholder="0"
+                        type="number"
+                        min={0}
+                        step={0.001}
+                        value={entryFeeSol}
+                        onChange={(e) => setEntryFeeSol(e.target.value)}
+                        isInvalid={!!errors.entryFeeSol}
+                        errorMessage={errors.entryFeeSol}
+                        endContent={
+                          <span className="text-[11px] font-mono text-slate-500 whitespace-nowrap">
+                            SOL
+                          </span>
+                        }
+                        classNames={{
+                          input:
+                            'bg-transparent text-cream-50 text-sm font-mono placeholder:text-slate-600',
+                          inputWrapper:
+                            'h-12 px-4 bg-ink-900/60 border border-white/[0.08] rounded-[var(--radius-md)] hover:border-white/[0.16] data-[focus=true]:border-accent-500 data-[focus=true]:shadow-[0_0_0_3px_rgba(249,115,22,0.15)] transition-all',
+                          errorMessage: 'text-xs text-error-500 mt-1',
+                        }}
+                      />
+                      <p className="text-[11px] text-slate-500">
+                        0 = free to join
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Prize preview */}
+                  {entryFeeNum > 0 && maxSizeNum >= 2 && (
+                    <div className="rounded-[var(--radius-md)] bg-accent-500/[0.06] border border-accent-500/20 p-3">
+                      <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-accent-500 mb-1">
+                        Prize pool if full
+                      </p>
+                      <p className="text-cream-50 text-lg font-mono font-semibold">
+                        {(entryFeeNum * maxSizeNum).toFixed(3)} SOL
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {maxSizeNum} × {entryFeeNum.toFixed(3)} SOL · winner takes all
+                      </p>
+                    </div>
+                  )}
                 </div>
               </ModalBody>
-              <ModalFooter>
+
+              <ModalFooter className="flex items-center justify-between gap-3">
                 <button
                   onClick={() => onClose()}
-                  className="px-5 h-10 rounded-full text-slate-400 text-sm hover:text-cream-50 transition-colors"
+                  className="px-5 h-10 rounded-full text-slate-400 text-sm font-medium hover:text-cream-50 hover:bg-white/[0.04] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleCreate(onClose)}
-                  disabled={createGroup.isPending}
+                  disabled={createGroup.isPending || !name.trim()}
                   className={cnm(
-                    'inline-flex items-center gap-2 px-5 h-10 rounded-full text-sm font-semibold',
+                    'inline-flex items-center gap-2 px-6 h-10 rounded-full text-sm font-semibold',
                     'transition-all duration-150 focus-ring active:scale-[0.97]',
-                    createGroup.isPending
-                      ? 'bg-accent-500/40 text-ink-900/60 cursor-not-allowed'
-                      : 'bg-accent-500 text-ink-900 hover:bg-accent-600',
+                    createGroup.isPending || !name.trim()
+                      ? 'bg-accent-500/30 text-ink-900/50 cursor-not-allowed'
+                      : 'bg-accent-500 text-ink-900 hover:bg-accent-600 shadow-[0_4px_16px_rgba(249,115,22,0.25)]',
                   )}
                 >
                   {createGroup.isPending && (
