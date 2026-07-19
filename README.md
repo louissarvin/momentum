@@ -503,6 +503,67 @@ REPLAY_FIXTURE_ID=18237038 REPLAY_SPEED=100 bun run worker:replay
 
 Reads archived `ScorePacket` rows from Postgres, re-emits them at the natural cadence keyed off original `Ts` values, at 1× to 1000× speed. Every code path downstream (classifier → SettlementJob queue → settler → CPI stack) is identical to the live path. Judges see a real settlement fire without waiting for FIFA to schedule a match.
 
+The live view renders a persistent **REPLAYING [Match Name] · MM:SS elapsed** pill in the top-right of the fixture header when the replay worker is driving the stream. Judges never mistake replayed activity for staged data.
+
+---
+
+## Scale: 104 games at cNFT cost
+
+The reason Solana wins this track is economics.
+
+| Cost model | Regular NFT (Metaplex Token Metadata) | Compressed NFT (mpl-bubblegum) |
+|---|---|---|
+| Rent per mint | ~0.012 SOL | ~0.000005 SOL |
+| USD equivalent (SOL @ $170) | ~$2.04 | **~$0.00085** |
+| One user's full album (8 stickers × 104 matches = 832 stickers) | ~$1,700 | **~$0.71** |
+| 1,000 fans, full albums (832,000 stickers) | ~$1.7M | **~$710** |
+| 10,000 fans, full albums (8.32M stickers) | ~$17M | **~$7,100** |
+
+Momentum's Bubblegum tree at [`2jKMbtBFhg...`](https://solscan.io/account/2jKMbtBFhgnsPNNQnz9awKzDBpgisPSa87pDg5ZiU5PX?cluster=devnet) is configured with `maxDepth=20, maxBufferSize=64, canopyDepth=14` — that's **1,048,576 leaf capacity** in a single tree, provisioned once for ~1 SOL upfront. Every subsequent mint is a proof-inclusion under the same root.
+
+**This is the whole reason a full-tournament sticker album is viable.** No other L1 or L2 can price per-user memorabilia at fractional cents. Ethereum L2s land closer to $0.05-0.20 per NFT mint at peak. Momentum ships an entire World Cup album — 832 stickers per user — for less than the cost of one Ethereum ERC-721 mint.
+
+This economics turns the platform-side calculus upside down. Instead of "which sticker do we mint for whom", we mint every valid prediction slot. Every user gets their full album whether they refresh once a day or check every ninety seconds. Scarcity comes from what you *called correctly*, not what the mint cost priced you out of.
+
+Compare this to trading cards: Panini printed ~14,000 unique World Cup 2022 sticker variants across 32 teams. Momentum can mint one HIT/MISS sticker per (user, fixture, slot) tuple across all 104 games — a superset of Panini's economics, on-chain, verifiable, and transferable, at 0.01% of the unit cost.
+
+---
+
+## TxLINE feedback (for the submission form)
+
+**What worked (top praise, in priority order):**
+
+1. **The single normalised JSON schema across all competitions.** The same `Fixture` shape, `Score` shape, and `Stat` codes work whether we're reading a World Cup group stage match or a friendly. This let us build one prediction card component that generalises to any future competition without a code change.
+2. **Merkle-proof-backed stat validation is the killer primitive.** `/api/proof/stat-validation-v3/:fixtureId/:seq/:statKey` returning a compact proof array that our on-chain program can verify inside a CPI is genuinely novel. No other sports data provider ships this. It's the reason we could build a "verifiable stickers" product at all — every alternative would have required us to trust a keeper or a multisig oracle. TxLINE lets us trust the math.
+3. **Guest auth flow (`/auth/guest/start` → `/api/token/activate`) is frictionless.** Two calls, zero API-key procurement paperwork, straight into development. This is exactly right for hackathon velocity.
+4. **The historical batch endpoint `/api/scores/updates/:epochDay/:hour/:intervalMin` unlocked our judging-day replay worker.** Without this endpoint, we couldn't have solved the "matches ended before judging" problem. It's under-marketed in the docs and it deserves a first-page callout.
+5. **SSE is the right transport choice.** Server-Sent Events keeps our ingester code simple (one-way stream, auto-reconnect, no WebSocket ceremony). We appreciated not having to wrestle with a WebSocket state machine.
+
+**Friction we hit (constructive, in priority order):**
+
+1. **PascalCase in SSE payloads vs snake_case in some REST responses.** We wrote a `normalize()` layer in `backend/src/lib/txline/normalize.ts` to converge them. A single canonical case convention across both transports would remove the normalization step. Small papercut, real cost across a team.
+2. **Gzip decompression quirks on `/api/scores/updates/...`.** Axios with default `decompress: true` occasionally returned pre-decompressed bytes; we settled on manual `Accept-Encoding: identity` + optional client-side gunzip to be safe. Documenting the expected `Content-Encoding` behaviour explicitly would save future integrators an afternoon.
+3. **JWT expiry not surfaced in the auth response.** We poll for 401s and refresh reactively, which works but wastes a request every rotation. Adding an `exp` claim in the token payload, or an `expires_in` field in the activate response, would let us refresh proactively.
+4. **The stat_key encoding scheme (base keys 1-8, period prefix multipliers) took two days to reverse-engineer from example payloads.** A single reference table in the docs listing every valid `(stat_key, period, participant)` triple with worked examples would dramatically lower the learning curve. We eventually wrote our own table for the team and it's in ADR-003.
+5. **No batch proof endpoint.** Our settler makes N sequential proof requests, one per slot in a card. A single `/api/proof/stat-validation-v3/batch` accepting `[{fixtureId, seq, statKey}, ...]` and returning proofs keyed by request index would collapse settlement from ~800ms to ~120ms for an 8-slot card.
+6. **SSE stream filter would be nice.** Right now we subscribe to the whole tournament firehose and filter fixture IDs client-side. `?fixtureIds=X,Y,Z` would let mobile-adjacent clients (Blinks, native apps) subscribe more efficiently.
+
+**Bug reports filed during the build (all resolved via workaround):** none critical. Everything above is friction, not failure. The API delivered on its live-data promise for the entirety of our 20-day build.
+
+**One-line summary for the sponsor:** *TxLINE is the first sports data provider whose data model matches how blockchain developers actually think — proofs, hashes, PDAs, seq numbers. That's rare, and it's exactly what let us build something you couldn't build on any other feed.*
+
+**TxLINE endpoints Momentum consumes (7 total):**
+
+| Endpoint | Where used | What we call it for |
+|---|---|---|
+| `POST /auth/guest/start` | `backend/src/lib/txline/bootstrap.ts` | Bootstrap unauthed session token |
+| `POST /api/token/activate` | `backend/src/lib/txline/bootstrap.ts` | Exchange for API token |
+| SSE stream (Bot API socket path) | `backend/src/lib/txline/sse.ts` + `workers/ingester.ts` | Live score packets, heartbeats, reconnect |
+| `GET /api/scores/:fixtureId` | `backend/src/lib/txline/proofs.ts` | Fixture snapshot on-demand |
+| `GET /api/scores/updates/:epochDay/:hour/:intervalMin` | `backend/src/lib/txline/proofs.ts` + `scripts/backfill.ts` | Historical batch (unlocked replay mode) |
+| `GET /api/proof/stat-validation-v3/:fixtureId/:seq/:statKey` | `backend/src/lib/txline/proofs.ts` + settler | Merkle proof for CPI |
+| `txoracle::validate_stat` CPI | `momentum_contract/programs/momentum/src/instructions/settle_prediction.rs` | On-chain proof verification inside settle_prediction atomic tx |
+
 ---
 
 ## Team and submission
