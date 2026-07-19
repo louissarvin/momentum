@@ -192,9 +192,17 @@ export type Flags = {
 }
 export type ReplayStatus = null | {
   active: boolean
-  fixtureId: string | null
-  currentSeq: number | null
-  endSeq: number | null
+  fixtureId: string
+  currentSeq: number
+  endSeq: number
+  startSeq: number
+  totalPackets: number
+  processedPackets: number
+  speed: number
+  startedAt: string
+  updatedAt: string
+  estimatedCompletionAt: string | null
+  finishedAt?: string
 }
 export type HealthResponse = {
   status: 'ok'
@@ -249,6 +257,7 @@ export type SseEvent =
       event: 'sticker_minted'
       data: {
         fixtureId: string
+        userWallet?: string
         cardPda?: string
         slotIndex?: number
         assetId?: string
@@ -257,7 +266,7 @@ export type SseEvent =
     }
   | {
       event: 'match_card_claimed'
-      data: { fixtureId: string; assetId?: string }
+      data: { fixtureId: string; userWallet?: string; assetId?: string }
     }
   | { event: 'settlement_started'; data: { fixtureId: string } }
   | { event: 'settlement_error'; data: { fixtureId: string; error: string } }

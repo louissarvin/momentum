@@ -520,8 +520,6 @@ function PredictBuilderPage() {
       ? statCatalog
       : statCatalog.filter((s) => s.category === catFilter)
 
-  const addedIds = new Set(slots.map((s) => s._stat.id))
-
   async function handleSubmit() {
     if (!connected) {
       setVisible(true)

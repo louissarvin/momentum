@@ -34,6 +34,7 @@ import {
 
 export interface MatchCardClaimedEvent {
   fixtureId: string
+  userWallet?: string
   assetId?: string
   hitCount?: number
   slotCount?: number

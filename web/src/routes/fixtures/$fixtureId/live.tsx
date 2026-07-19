@@ -31,6 +31,7 @@ import {
   MatchCardRevealCurtain,
   type MatchCardClaimedEvent,
 } from '@/components/MatchCardRevealCurtain'
+import { ReplayModeBanner } from '@/components/ReplayModeBanner'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -280,7 +281,7 @@ function LiveMatchPage() {
         {fixture && (
           <AnimateComponent entry="fadeInUp" duration={500}>
             <div className="p-6 md:p-8 rounded-3xl bg-ink-800 border border-white/[0.08] mb-8">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <Radio
                   size={14}
                   strokeWidth={1.75}
@@ -296,9 +297,16 @@ function LiveMatchPage() {
                 >
                   {connected ? 'Live · watching stream' : 'Offline'}
                 </p>
-                <span className="text-[10px] font-mono text-slate-700 ml-auto">
+                <span className="text-[10px] font-mono text-slate-700 flex-1 text-right">
                   {fixture.competitionName ?? `#${fixture.competitionId}`}
                 </span>
+                <ReplayModeBanner
+                  fixtureLabel={
+                    fixture.homeTeam && fixture.awayTeam
+                      ? `${fixture.homeTeam} vs ${fixture.awayTeam}`
+                      : undefined
+                  }
+                />
               </div>
               <div className="grid grid-cols-3 items-center gap-4">
                 <div>
