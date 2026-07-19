@@ -13,7 +13,20 @@ Deploy the Momentum backend to Railway as 4 services (HTTP + ingester + settler 
 - Logged in: `railway login` (opens browser OAuth)
 - Supabase project active (see [top-level README](../README.md#run-locally))
 - Solana devnet keeper wallet with ≥0.5 SOL (`solana balance --url devnet`)
-- Keeper keypair as a JSON array (extract with `cat ~/.config/solana/id.json`)
+
+### CRITICAL: Extract your keeper as a JSON string
+
+Railway containers do NOT have your local `~/.config/solana/id.json` file. You must pass the keypair as an env-var string, not a file path.
+
+```bash
+cat ~/.config/solana/id.json
+```
+
+Output looks like: `[123,45,67,89,...]` — a JSON array of exactly 64 numbers.
+
+Copy that entire line (brackets included). You'll paste it as `KEEPER_SECRET_JSON` in Railway (step 2 below).
+
+**Do NOT also set `KEEPER_KEYPAIR_PATH` in Railway.** If both are set, the code prefers `KEEPER_SECRET_JSON` — but leaving the path set is confusing and copies a broken local convention into prod. Remove it from Railway variables if it's there.
 
 ---
 
@@ -50,8 +63,10 @@ railway variables set \
   TELEGRAM_BOT_TOKEN='YOUR_TOKEN' \
   TELEGRAM_GROUP_CHAT_ID='YOUR_CHAT_ID' \
   NOTIFY_SHARED_SECRET='YOUR_16_PLUS_CHAR_SECRET' \
-  KEEPER_SECRET_JSON='[123,45,67,...]'
+  KEEPER_SECRET_JSON="$(cat ~/.config/solana/id.json)"
 ```
+
+The `KEEPER_SECRET_JSON` line uses shell expansion to read your local keyfile directly — no manual copy-paste. The env var stored in Railway is the raw JSON array string (`[123,45,...]`).
 
 **Never commit these.** They live only in Railway.
 

@@ -66,7 +66,7 @@ ENV NODE_ENV=production \
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      openssl ca-certificates curl tini \
+      openssl ca-certificates tini \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 1001 momentum \
     && useradd --system --uid 1001 --gid momentum --home /app momentum
@@ -80,14 +80,9 @@ USER momentum
 
 EXPOSE 3700
 
-# Healthcheck against our own /health endpoint. Fly.io and Railway both
-# honour Docker HEALTHCHECK; container restarts on 3 consecutive failures.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -fsS http://localhost:${APP_PORT}/health || exit 1
-
 # tini reaps zombie children (Bun spawns workers via child_process for the
 # Telegram long-poller HTTP loop; without tini they'd stack up under load)
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# Default: HTTP server. Override in fly.toml [processes] for workers.
+# Default: HTTP server. Override per Railway service for workers.
 CMD ["bun", "run", "index.ts"]
