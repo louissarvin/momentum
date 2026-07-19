@@ -455,6 +455,17 @@ function spawnWorkers(): void {
   const restartCounts = new Map<string, number>();
 
   const spawn = (name: string): void => {
+    // Replay worker gracefully exits when REPLAY_MODE=false. Don't even
+    // bother spawning it in that case — otherwise we log a boot noise every
+    // container start.
+    if (name === 'replay' && process.env.REPLAY_MODE !== 'true') {
+      fastify.log.info(
+        { worker: name },
+        '[bootstrap] REPLAY_MODE is not true, skipping replay worker (set REPLAY_MODE=true to enable)',
+      );
+      return;
+    }
+
     const script = `src/workers/${name}.ts`;
     fastify.log.info({ worker: name, script }, '[bootstrap] spawning worker');
 
@@ -463,11 +474,21 @@ function spawnWorkers(): void {
       stderr: 'inherit',
       env: process.env,
       onExit(_p, exitCode, signalCode) {
+        // Exit code 0 = clean exit (e.g. replay finished, or REPLAY_MODE
+        // sentinel returned). Only non-zero exits trigger restart loop.
+        if (exitCode === 0) {
+          fastify.log.info(
+            { worker: name, exitCode, signalCode },
+            '[bootstrap] worker exited cleanly, not restarting',
+          );
+          return;
+        }
+
         const count = (restartCounts.get(name) ?? 0) + 1;
         restartCounts.set(name, count);
         fastify.log.warn(
           { worker: name, exitCode, signalCode, restarts: count },
-          '[bootstrap] worker exited',
+          '[bootstrap] worker crashed',
         );
         if (count > maxRestarts) {
           fastify.log.error(
