@@ -425,11 +425,64 @@ const start = async (): Promise<void> => {
     );
 
     startTxlineBootstrap();
+
+    // ------------------------------------------------------------
+    // Auto-spawn workers in the same container.
+    //
+    // Set AUTO_SPAWN_WORKERS=true (Railway/Fly) to run all 3 workers
+    // as child processes alongside the HTTP server. Each worker's
+    // stdio is inherited so logs stream to the container log. If a
+    // worker crashes, we log it but keep the HTTP server running —
+    // and restart the worker up to 5 times with 5s backoff.
+    //
+    // For local dev, leave this unset and run each worker in its
+    // own `bun run` terminal (per README).
+    // ------------------------------------------------------------
+    if (process.env.AUTO_SPAWN_WORKERS === 'true') {
+      spawnWorkers();
+    }
   } catch (error) {
     fastify.log.error({ err: error }, 'Error starting server');
     captureError(error, { component: 'boot' });
     process.exit(1);
   }
 };
+
+function spawnWorkers(): void {
+  const workers = ['ingester', 'settler', 'replay'] as const;
+  const maxRestarts = 5;
+  const restartDelayMs = 5000;
+  const restartCounts = new Map<string, number>();
+
+  const spawn = (name: string): void => {
+    const script = `src/workers/${name}.ts`;
+    fastify.log.info({ worker: name, script }, '[bootstrap] spawning worker');
+
+    const proc = Bun.spawn(['bun', 'run', script], {
+      stdout: 'inherit',
+      stderr: 'inherit',
+      env: process.env,
+      onExit(_p, exitCode, signalCode) {
+        const count = (restartCounts.get(name) ?? 0) + 1;
+        restartCounts.set(name, count);
+        fastify.log.warn(
+          { worker: name, exitCode, signalCode, restarts: count },
+          '[bootstrap] worker exited',
+        );
+        if (count > maxRestarts) {
+          fastify.log.error(
+            { worker: name, maxRestarts },
+            '[bootstrap] worker exceeded max restart attempts, giving up',
+          );
+          return;
+        }
+        setTimeout(() => spawn(name), restartDelayMs);
+      },
+    });
+    fastify.log.info({ worker: name, pid: proc.pid }, '[bootstrap] worker started');
+  };
+
+  workers.forEach(spawn);
+}
 
 void start();
