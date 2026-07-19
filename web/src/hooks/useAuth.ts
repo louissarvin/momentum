@@ -7,6 +7,42 @@ import type { SessionUser } from '@/lib/api/types'
 import { sessionApi } from '@/lib/api/endpoints'
 import { clearJwt, getJwt, setJwt } from '@/lib/api/client'
 
+/**
+ * Decode a JWT payload without needing a lib. Returns null on any parse
+ * error — we treat unknown-shape JWTs as "not for this wallet" so the auth
+ * flow re-triggers rather than silently continuing with a stale token.
+ */
+function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
+  try {
+    const parts = jwt.split('.')
+    if (parts.length !== 3) return null
+    // base64url → base64 → binary → json
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4)
+    const json = atob(padded)
+    const decoded = JSON.parse(json)
+    return typeof decoded === 'object' && decoded !== null ? decoded : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Extract the wallet address the JWT was issued for.
+ * Returns null if we can't determine (parse fail, missing claim, etc).
+ * Callers should treat null as "unknown, don't take destructive action".
+ */
+function jwtWalletOrNull(jwt: string): string | null {
+  const payload = decodeJwtPayload(jwt)
+  if (!payload) return null
+  // Backend session.ts signs the JWT with `{ sub, wallet }`.
+  const jwtWallet =
+    (typeof payload.wallet === 'string' && payload.wallet) ||
+    (typeof payload.walletAddress === 'string' && payload.walletAddress) ||
+    null
+  return jwtWallet || null
+}
+
 interface AuthState {
   jwt: string | null
   user: SessionUser | null
@@ -92,17 +128,44 @@ export function useAuth() {
   const storedJwt = getJwt()
   const jwt = store.jwt ?? storedJwt
 
-  // Auto-trigger SIWS login when wallet just connected and we have no JWT yet.
-  // Guarded by a ref so we don't loop if the user rejects the sign prompt.
-  const attempted = useRef<string | null>(null)
+  // Auto-trigger SIWS login when wallet just connected and we have no JWT
+  // yet. Also re-triggers on genuine wallet swaps in Phantom.
+  //
+  // Design tradeoffs (learned the hard way):
+  //  - Do NOT clear JWT on wallet.connected=false. The adapter briefly
+  //    flips connected off during page navigation / hot-reload, which
+  //    would wipe a valid session on every route change.
+  //  - `attempted` is scoped per-wallet AND stores a timestamp so we can
+  //    allow re-attempts after 10 seconds instead of permanently blocking.
+  //  - If JWT decode fails for any reason (malformed, network hiccup),
+  //    treat it as valid and keep it — clearing on parse error caused
+  //    "Session required" toasts on transient issues.
+  const attempted = useRef<{ wa: string; at: number } | null>(null)
   useEffect(() => {
     if (!wallet.connected || !wallet.publicKey) return
-    if (jwt) return
     if (store.loading) return
     const wa = wallet.publicKey.toBase58()
-    // Skip if we already tried (and possibly failed) for this exact wallet
-    if (attempted.current === wa) return
-    attempted.current = wa
+
+    // Genuine wallet-swap detection: only clear when we can PROVE the JWT
+    // is for a different wallet (parse succeeded + claim mismatch). If the
+    // decoder returns null (parse failure), assume the JWT is fine.
+    if (jwt) {
+      const jwtWallet = jwtWalletOrNull(jwt)
+      if (jwtWallet !== null && jwtWallet !== wa) {
+        store.clearAuth()
+        attempted.current = null
+        return
+      }
+      return // valid JWT for this wallet, nothing to do
+    }
+
+    // No JWT yet — attempt login. Guard against tight loops with a 10s
+    // cooldown per wallet, so if the user rejects Phantom's prompt they
+    // can retry by reconnecting (or clicking `login` from the header).
+    const prev = attempted.current
+    const now = Date.now()
+    if (prev && prev.wa === wa && now - prev.at < 10_000) return
+    attempted.current = { wa, at: now }
     void login()
   }, [wallet.connected, wallet.publicKey?.toBase58(), jwt, store.loading])
 

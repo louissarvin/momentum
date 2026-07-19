@@ -37,7 +37,7 @@ export default function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { setVisible } = useWalletModal()
   const { publicKey, connected } = useWallet()
-  const { logout } = useAuth()
+  const { logout, isAuthenticated, loading: authLoading, login } = useAuth()
   const routerState = useRouterState()
 
   const walletAddress = publicKey?.toBase58() ?? ''
@@ -140,6 +140,25 @@ export default function AppHeader() {
               >
                 <User size={14} strokeWidth={1.75} />
               </Link>
+            )}
+
+            {/* Sign-in pill — shown when connected but not authenticated */}
+            {connected && !isAuthenticated && (
+              <button
+                onClick={() => void login()}
+                disabled={authLoading}
+                className={cnm(
+                  'h-9 px-4 rounded-full text-xs font-semibold',
+                  'bg-accent-500/15 text-accent-500 border border-accent-500/30',
+                  'hover:bg-accent-500/25 transition-colors duration-150',
+                  'inline-flex items-center gap-2',
+                  authLoading && 'opacity-60 cursor-wait',
+                )}
+                title="Sign a message to authenticate with the backend"
+              >
+                <Wallet size={13} strokeWidth={1.75} />
+                <span>{authLoading ? 'Signing…' : 'Sign in'}</span>
+              </button>
             )}
 
             {/* Wallet */}
