@@ -53,6 +53,20 @@ const EnvSchema = z.object({
   METADATA_HOST: z.string().url().default('https://cdn.momentum.app'),
   SENTRY_DSN: z.string().url().optional(),
 
+  // Telegram companion bot (all optional — if TELEGRAM_BOT_TOKEN is unset
+  // the plugin silently no-ops so a fresh env still boots cleanly).
+  TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
+  TELEGRAM_GROUP_CHAT_ID: z.string().min(1).optional(),
+  // Shared secret protecting POST /api/notify/telegram (settler → HTTP).
+  // Enforced min 16 chars ONLY when provided.
+  NOTIFY_SHARED_SECRET: z.string().min(16, 'NOTIFY_SHARED_SECRET must be at least 16 characters').optional(),
+  // Absolute base URL the settler uses to POST notifications back to this
+  // process. Defaults to http://localhost:${APP_PORT} at runtime.
+  BACKEND_INTERNAL_URL: z.string().url().optional(),
+  // Public Solscan cluster query param (?cluster=devnet). Defaults derived
+  // from SOLANA_CLUSTER.
+  SOLSCAN_CLUSTER: z.enum(['devnet', 'mainnet-beta', 'testnet']).optional(),
+
   // Replay mode (Phase E / E.1)
   REPLAY_MODE: z.preprocess(parseBool, z.boolean()).default(false),
   REPLAY_FIXTURE_ID: z.string().optional(),

@@ -85,6 +85,63 @@ const HEARTBEAT_INTERVAL_MS = 1000;
 const MAX_ATTEMPTS = 3;
 const RETRY_BACKOFF_MS = 2000;
 
+// ---- telegram notify (fire-and-forget HTTP push to the HTTP process) ----
+//
+// The settler runs as its OWN Bun process (see package.json `worker:settler`),
+// so it can't reach `app.telegram` directly. We POST to /api/notify/telegram
+// on the HTTP process, gated by NOTIFY_SHARED_SECRET.
+//
+// Every failure path here is swallowed — a Telegram outage MUST NEVER
+// block or crash settlement. We give it 3 seconds max (AbortSignal.timeout)
+// so a hung DNS lookup on the Telegram edge can't wedge the settler loop.
+
+function backendUrl(): string {
+  return env.BACKEND_INTERNAL_URL ?? `http://localhost:${env.APP_PORT}`;
+}
+
+async function notifyTelegramMint(
+  payload: {
+    assetId?: string | null;
+    outcome: 'HIT' | 'MISS';
+    fixtureId: string;
+    slotIndex: number;
+    txSig: string;
+  },
+  log: (m: string, x?: unknown) => void,
+): Promise<void> {
+  if (!env.NOTIFY_SHARED_SECRET) {
+    // Not configured — skip silently. Not an error condition.
+    return;
+  }
+  const body = JSON.stringify({
+    assetId: payload.assetId ?? undefined,
+    outcome: payload.outcome,
+    fixtureId: payload.fixtureId,
+    slotIndex: payload.slotIndex,
+    txSig: payload.txSig,
+  });
+  try {
+    const res = await fetch(`${backendUrl()}/api/notify/telegram`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Notify-Secret': env.NOTIFY_SHARED_SECRET,
+      },
+      body,
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.status === 204) {
+      log('telegram bot disabled (204) — skipping');
+      return;
+    }
+    if (!res.ok) {
+      log(`telegram notify non-2xx: ${res.status}`);
+    }
+  } catch (err) {
+    log('telegram notify failed (non-fatal)', { err: (err as Error).message });
+  }
+}
+
 // Priority-fee escalation ladder (microLamports/CU).
 const PRIORITY_LADDER = [20_000, 50_000, 100_000];
 
@@ -409,6 +466,18 @@ async function handleSettleJob(
       } catch {
         // best-effort
       }
+
+      // Telegram push (fire-and-forget, non-blocking, non-fatal).
+      void notifyTelegramMint(
+        {
+          assetId: decoded?.assetId ?? assetIdStr,
+          outcome: decision.outcomeClaim === 1 ? 'HIT' : 'MISS',
+          fixtureId: card.fixtureId,
+          slotIndex,
+          txSig: sent.signature,
+        },
+        log,
+      );
 
       successCount++;
     }

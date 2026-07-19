@@ -25,6 +25,7 @@ import authPlugin from './src/plugins/auth.ts';
 import streamPlugin from './src/plugins/stream.ts';
 import pgNotifyBridge from './src/plugins/pg-notify-bridge.ts';
 import corsActionsPlugin from './src/plugins/cors-actions.ts';
+import telegramPlugin from './src/plugins/telegram.ts';
 
 // Routes
 import { healthRoutes } from './src/routes/health.ts';
@@ -43,6 +44,7 @@ import { logsRoutes } from './src/routes/logs.ts';
 import { statsRoutes } from './src/routes/stats.ts';
 import { userRoutes } from './src/routes/users.ts';
 import { matchCardRoutes } from './src/routes/match-cards.ts';
+import { notifyRoutes } from './src/routes/notify.ts';
 
 // Workers
 import { startErrorLogCleanupWorker } from './src/workers/errorLogCleanup.ts';
@@ -193,6 +195,9 @@ async function registerPlugins(): Promise<void> {
   await fastify.register(streamPlugin);
   await fastify.register(pgNotifyBridge);
   await fastify.register(corsActionsPlugin);
+  // Telegram plugin AFTER auth/solana (in case future commands need them),
+  // BEFORE the /api/notify route below which reads `app.telegram`.
+  await fastify.register(telegramPlugin);
 
   // -------- OpenAPI (Phase E / E.4) --------
   await fastify.register(FastifySwagger, {
@@ -252,6 +257,7 @@ function registerRoutes(): void {
   fastify.register(statsRoutes, { prefix: '/api/stats' });
   fastify.register(userRoutes, { prefix: '/api/users' });
   fastify.register(matchCardRoutes, { prefix: '/api/match-cards' });
+  fastify.register(notifyRoutes, { prefix: '/api/notify' });
   if (env.IS_DEV) {
     fastify.register(logsRoutes, { prefix: '/api/logs' });
   }
