@@ -19,9 +19,63 @@
  *  - https://core.telegram.org/bots/api#sendphoto (photo requirements)
  */
 
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { Resvg } from '@resvg/resvg-js';
 
 export type CardOutcome = 'HIT' | 'MISS' | 'PENDING';
+
+// ---------- logo bootstrap ----------
+
+// Pre-render the Momentum logo to a compact PNG once at module load so we
+// can embed it in every card SVG as a data URI. resvg-js can't reliably
+// nest complex SVGs (masks + filters + embedded PNGs) via <image href="...svg">,
+// so pre-rasterising is both faster and more portable.
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const LOGO_SVG_PATH = join(__dirname, 'momentum-logo.svg');
+
+interface RenderedLogo {
+  base64: string; // "data:image/png;base64,..."
+  width: number;
+  height: number;
+}
+
+function preRenderLogo(targetWidth: number): RenderedLogo | null {
+  try {
+    const svg = readFileSync(LOGO_SVG_PATH, 'utf8');
+    const resvg = new Resvg(svg, {
+      fitTo: { mode: 'width', value: targetWidth },
+      background: 'rgba(0,0,0,0)', // transparent
+      font: { loadSystemFonts: false, defaultFontFamily: 'sans-serif' },
+    });
+    const rendered = resvg.render();
+    const png = rendered.asPng();
+    const dims = rendered; // has .width / .height
+    // resvg-js exposes width/height directly on the RenderedImage
+    // (verified via .d.ts). We fall back to a reasonable default if not.
+    const w = (dims as unknown as { width?: number }).width ?? targetWidth;
+    const h =
+      (dims as unknown as { height?: number }).height ??
+      Math.round(targetWidth * 0.5625);
+    return {
+      base64: `data:image/png;base64,${Buffer.from(png).toString('base64')}`,
+      width: w,
+      height: h,
+    };
+  } catch (err) {
+    // Non-fatal: card falls back to text-only header/hex if logo missing.
+    // eslint-disable-next-line no-console
+    console.warn('[card-image] logo pre-render failed:', (err as Error).message);
+    return null;
+  }
+}
+
+// Two sizes cached at module load: header (compact) + hex (large square-ish)
+const LOGO_HEADER = preRenderLogo(360); // ~360 x 202 rendered
+const LOGO_HEX = preRenderLogo(560); // ~560 x 315 rendered
 
 export interface CardOpts {
   name: string;
@@ -100,30 +154,50 @@ export function buildCardSvg(opts: CardOpts): string {
       ? `tx ${shortAddr(opts.txSig)}`
       : 'devnet · solana';
 
-  // Hexagon path (pointy-top). Centered at (260, 315), radius 170.
-  // Vertices computed from 6 60deg steps starting at -90deg.
-  const cx = 260;
+  // Hexagon path (pointy-top). Centered at (280, 315), radius 190.
+  const cx = 280;
   const cy = 315;
-  const r = 170;
+  const r = 190;
   const hexPoints = Array.from({ length: 6 }, (_, i) => {
     const angle = ((-90 + i * 60) * Math.PI) / 180;
     return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
   }).join(' ');
-  const hexInnerR = 128;
+  const hexInnerR = 144;
   const hexInnerPoints = Array.from({ length: 6 }, (_, i) => {
     const angle = ((-90 + i * 60) * Math.PI) / 180;
     return `${cx + hexInnerR * Math.cos(angle)},${cy + hexInnerR * Math.sin(angle)}`;
   }).join(' ');
+
+  // Logo placement inside hex: the wordmark IS the sticker artwork.
+  // Fit width to 220 (comfortably inside 288px inner-hex diameter).
+  const hexLogoW = LOGO_HEX ? 220 : 0;
+  const hexLogoH = LOGO_HEX ? Math.round((LOGO_HEX.height / LOGO_HEX.width) * hexLogoW) : 0;
+  const hexLogoX = cx - hexLogoW / 2;
+  const hexLogoY = cy - hexLogoH / 2;
+
+  // Header stays clean text — dot + wordmark + mono status. No overlap with hex.
+  const headerBlock = `
+    <g transform="translate(60, 60)">
+      <circle cx="14" cy="14" r="10" fill="${PALETTE.accent}"/>
+      <text x="38" y="22" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="28" font-weight="700" fill="${PALETTE.cream}" letter-spacing="-0.5">MOMENTUM</text>
+      <text x="38" y="46" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="${PALETTE.creamMuted}" letter-spacing="1.5" opacity="0.7">SOLANA · DEVNET</text>
+    </g>
+  `;
+
+  const hexInner = LOGO_HEX
+    ? `<image href="${LOGO_HEX.base64}" x="${hexLogoX}" y="${hexLogoY}" width="${hexLogoW}" height="${hexLogoH}" preserveAspectRatio="xMidYMid meet"/>`
+    : `<text x="${cx}" y="${cy + 40}" text-anchor="middle" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="140" font-weight="800" fill="${PALETTE.ink900}">M</text>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
   <defs>
     <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
       <path d="M 24 0 L 0 0 0 24" fill="none" stroke="${PALETTE.grid}" stroke-width="1"/>
     </pattern>
-    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${color.fill}" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="${color.fill}" stop-opacity="0.05"/>
-    </linearGradient>
+    <radialGradient id="accentGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="${color.fill}" stop-opacity="0.35"/>
+      <stop offset="55%" stop-color="${color.fill}" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="${color.fill}" stop-opacity="0"/>
+    </radialGradient>
     <linearGradient id="hexGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${PALETTE.cream}"/>
       <stop offset="100%" stop-color="${PALETTE.creamMuted}"/>
@@ -135,53 +209,47 @@ export function buildCardSvg(opts: CardOpts): string {
   <rect width="${W}" height="${H}" fill="url(#grid)"/>
 
   <!-- Accent gradient wash behind hex (adds a subtle glow tinted by outcome) -->
-  <circle cx="${cx}" cy="${cy}" r="240" fill="url(#accentGrad)"/>
+  <circle cx="${cx}" cy="${cy}" r="280" fill="url(#accentGrad)"/>
 
-  <!-- 2. Header row -->
-  <g transform="translate(60, 60)">
-    <!-- Wordmark dot -->
-    <circle cx="14" cy="14" r="10" fill="${PALETTE.accent}"/>
-    <text x="38" y="22" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="28" font-weight="700" fill="${PALETTE.cream}" letter-spacing="-0.5">MOMENTUM</text>
-    <text x="38" y="46" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="${PALETTE.creamMuted}" letter-spacing="1.5" opacity="0.7">SOLANA · DEVNET</text>
-  </g>
+  <!-- 2. Header row: real Momentum logo top-left -->
+  ${headerBlock}
 
   <!-- Outcome pill top-right -->
-  <g transform="translate(${W - 60}, 60)">
-    <rect x="-172" y="-4" width="172" height="44" rx="22" fill="${color.fill}"/>
-    <text x="-84" y="26" text-anchor="middle" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="20" font-weight="800" fill="${PALETTE.ink900}" letter-spacing="2">${color.icon} ${color.label}</text>
+  <g transform="translate(${W - 60}, 72)">
+    <rect x="-180" y="-4" width="180" height="48" rx="24" fill="${color.fill}"/>
+    <text x="-90" y="27" text-anchor="middle" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="22" font-weight="800" fill="${PALETTE.ink900}" letter-spacing="2">${color.icon} ${color.label}</text>
   </g>
 
-  <!-- 3. Hexagonal sticker mark -->
-  <polygon points="${hexPoints}" fill="${PALETTE.ink800}" stroke="${color.fill}" stroke-width="4"/>
+  <!-- 3. Hexagonal sticker mark with real logo centered -->
+  <polygon points="${hexPoints}" fill="${PALETTE.ink800}" stroke="${color.fill}" stroke-width="5"/>
   <polygon points="${hexInnerPoints}" fill="url(#hexGrad)"/>
-  <!-- Center glyph: big M -->
-  <text x="${cx}" y="${cy + 40}" text-anchor="middle" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="140" font-weight="800" fill="${PALETTE.ink900}">M</text>
+  ${hexInner}
 
   <!-- 4. Right column text -->
-  <g transform="translate(510, 200)">
+  <g transform="translate(560, 210)">
     <!-- Small label -->
     <text x="0" y="0" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="14" fill="${color.fill}" letter-spacing="2" font-weight="700">PREDICTION MINTED</text>
 
     <!-- Name (huge) -->
-    <text x="0" y="60" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="52" font-weight="800" fill="${PALETTE.cream}" letter-spacing="-1">${name}</text>
+    <text x="0" y="62" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="52" font-weight="800" fill="${PALETTE.cream}" letter-spacing="-1">${name}</text>
 
     ${fixtureLabel ? `
     <!-- Fixture label -->
-    <text x="0" y="115" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="24" font-weight="500" fill="${PALETTE.creamMuted}">${fixtureLabel}</text>
+    <text x="0" y="118" font-family="'Bricolage Grotesque', system-ui, sans-serif" font-size="24" font-weight="500" fill="${PALETTE.creamMuted}">${fixtureLabel}</text>
     ` : ''}
 
     ${slotLabel ? `
     <!-- Slot label (mono, muted) -->
-    <text x="0" y="160" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="18" fill="${PALETTE.neutral}" letter-spacing="0.5">${slotLabel}</text>
+    <text x="0" y="164" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="18" fill="${PALETTE.neutral}" letter-spacing="0.5">${slotLabel}</text>
     ` : ''}
   </g>
 
   <!-- 5. Footer -->
-  <line x1="60" y1="${H - 90}" x2="${W - 60}" y2="${H - 90}" stroke="${PALETTE.ink700}" stroke-width="1"/>
-  <g transform="translate(60, ${H - 60})">
-    <text x="0" y="0" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="14" fill="${PALETTE.creamMuted}" letter-spacing="1">MERKLE-VERIFIED · TXLINE · MPL-BUBBLEGUM</text>
+  <line x1="60" y1="${H - 88}" x2="${W - 60}" y2="${H - 88}" stroke="${PALETTE.ink700}" stroke-width="1"/>
+  <g transform="translate(60, ${H - 54})">
+    <text x="0" y="0" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="14" fill="${PALETTE.creamMuted}" letter-spacing="1">TXLINE · MPL-BUBBLEGUM · SOLANA DEVNET</text>
   </g>
-  <g transform="translate(${W - 60}, ${H - 60})">
+  <g transform="translate(${W - 60}, ${H - 54})">
     <text x="0" y="0" text-anchor="end" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="14" fill="${PALETTE.creamMuted}" letter-spacing="0.5">${svgEscape(footerAddr)}</text>
   </g>
 </svg>`;
