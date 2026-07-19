@@ -1,0 +1,49 @@
+# Never bake into the image
+.env
+.env.local
+.env.*.local
+
+# Node / Bun installs (built inside the deps stage)
+node_modules
+bun.lockb.bak
+
+# Prisma generated client (regenerated inside build stage)
+prisma/generated
+
+# Local keypairs / secrets
+*.pem
+*.key
+keeper.json
+keypair.json
+.smoke-lut.json
+
+# Logs + runtime junk
+*.log
+*.pid
+tmp/
+.tmp/
+
+# Editors / IDE
+.vscode
+.idea
+.claude
+.DS_Store
+Thumbs.db
+
+# Docs + notes not needed at runtime
+notes/
+CLAUDE.md
+ADR.md
+README.md.bak
+
+# Local test fixtures + scripts we don't need in prod
+tests/fixtures/*.so
+scripts/smoke-*.ts
+scripts/e2e-*.ts
+scripts/load-*.ts
+scripts/demo-*.ts
+
+# Build artefacts if any
+dist
+.output
+.turbo
