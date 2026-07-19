@@ -24,6 +24,7 @@ import { solscanAcct } from '@/utils/solscan'
 import { env } from '@/env'
 import { cnm } from '@/utils/style'
 import AnimateComponent from '@/components/elements/AnimateComponent'
+import { GroupLeaderboard } from '@/components/GroupLeaderboard'
 
 export const Route = createFileRoute('/groups/$groupPda')({
   component: GroupLobbyPage,
@@ -324,6 +325,11 @@ function GroupLobbyPage() {
                   </div>
                 </div>
               </div>
+            </AnimateComponent>
+
+            {/* Leaderboard */}
+            <AnimateComponent entry="fadeInUp" duration={400} delay={80}>
+              <GroupLeaderboard groupPda={groupPda} />
             </AnimateComponent>
 
             {/* Main layout */}
