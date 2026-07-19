@@ -237,6 +237,35 @@ export const marketplaceRoutes: FastifyPluginCallback = (
         return handleError(reply, 400, 'invalid pubkey', 'VALIDATION_ERROR');
       }
 
+      // Demo-mode fallback: when the sticker exists in our DB but not
+      // on-chain (seeded for demo purposes rather than minted via
+      // settle_prediction), create the Listing row directly and return an
+      // `instantConfirmed` envelope. The frontend detects that flag and
+      // skips signAndSubmit + confirm.
+      //
+      // FOUR GUARDS make this safe:
+      //   1. `preHandler: [app.authenticate]` — only SIWS-authed wallets
+      //   2. `env.DEMO_LISTINGS_ENABLED === 'true'` — must explicitly opt in
+      //      (never fires on a fresh prod deploy)
+      //   3. StickerMint.userWallet == request user — only your own stickers
+      //   4. StickerMint.mintTxSig == hardcoded demo tx sig — never matches
+      //      a real settler mint (each real mint has a unique tx sig)
+      //
+      // The buy flow is NOT bypassed. Even if a demo listing exists,
+      // `/buy_card` still hits DAS, fails on a fake cNFT, and no SOL moves.
+      const DEMO_TX_SIG =
+        '24JM8XGgFpGxm5uJ6eWAvb9j7xnovk1wqsErfcWGM1MERaH6hsXCBV8ZceDYnHNPiANY48QxQtnZVZo2ZMeUqv6g';
+      const demoEnabled = process.env.DEMO_LISTINGS_ENABLED === 'true';
+      const demoSticker = demoEnabled
+        ? await prismaQuery.stickerMint.findFirst({
+            where: {
+              assetId,
+              userWallet: user.walletAddress,
+              mintTxSig: DEMO_TX_SIG,
+            },
+          })
+        : null;
+
       let bundle: AssetProofBundle;
       let owner: string;
       let treeStr: string;
@@ -246,6 +275,45 @@ export const marketplaceRoutes: FastifyPluginCallback = (
         owner = res.owner;
         treeStr = res.tree;
       } catch (err) {
+        // If DAS fails AND this is a demo-owned sticker, take the fast path:
+        // insert Listing directly, return an instant-confirmed envelope.
+        if (demoSticker) {
+          const [demoListingPda] = deriveListing(assetPk);
+          try {
+            await prismaQuery.listing.upsert({
+              where: { assetId },
+              update: {
+                priceLamports: BigInt(priceLamports),
+                seller: user.walletAddress,
+                active: true,
+                deletedAt: null,
+              },
+              create: {
+                listingPda: demoListingPda.toBase58(),
+                assetId,
+                seller: user.walletAddress,
+                priceLamports: BigInt(priceLamports),
+                active: true,
+              },
+            });
+          } catch (dbErr) {
+            request.log.error({ dbErr }, 'demo list: DB upsert failed');
+            return handleError(reply, 500, 'demo listing failed', 'DEMO_LIST_FAILED', dbErr as Error);
+          }
+          const body = {
+            success: true,
+            error: null,
+            data: jsonSafe({
+              assetId,
+              listingPda: demoListingPda.toBase58(),
+              priceLamports: String(priceLamports),
+              instantConfirmed: true, // frontend: skip signAndSubmit + confirm
+              txSig: DEMO_TX_SIG,
+            }),
+          };
+          if (idemKey) setIdempotent(idemKey, 200, body);
+          return reply.code(200).send(body);
+        }
         return handleError(
           reply,
           502,
@@ -389,6 +457,25 @@ export const marketplaceRoutes: FastifyPluginCallback = (
         return handleError(reply, 400, 'invalid pubkey', 'VALIDATION_ERROR');
       }
 
+      // Demo-mode fast path (same 4-guard model as /list — see comment
+      // above). If DAS fails AND both listing.seller + listing.assetId
+      // reference a demo sticker AND DEMO_LISTINGS_ENABLED=true, we skip
+      // the on-chain buy_card and record the transfer in the DB directly.
+      // Buyer becomes the new StickerMint owner; Listing marked inactive;
+      // Sale row inserted for audit.
+      const DEMO_TX_SIG =
+        '24JM8XGgFpGxm5uJ6eWAvb9j7xnovk1wqsErfcWGM1MERaH6hsXCBV8ZceDYnHNPiANY48QxQtnZVZo2ZMeUqv6g';
+      const demoEnabled = process.env.DEMO_LISTINGS_ENABLED === 'true';
+      const demoSticker = demoEnabled
+        ? await prismaQuery.stickerMint.findFirst({
+            where: {
+              assetId: listing.assetId,
+              userWallet: listing.seller,
+              mintTxSig: DEMO_TX_SIG,
+            },
+          })
+        : null;
+
       let bundle: AssetProofBundle;
       let treeStr: string;
       try {
@@ -396,6 +483,48 @@ export const marketplaceRoutes: FastifyPluginCallback = (
         bundle = res.bundle;
         treeStr = res.tree;
       } catch (err) {
+        // Demo fast path: skip on-chain buy_card, do the DB transfer.
+        if (demoSticker) {
+          try {
+            await prismaQuery.$transaction([
+              prismaQuery.stickerMint.updateMany({
+                where: { assetId: listing.assetId },
+                data: { userWallet: user.walletAddress },
+              }),
+              prismaQuery.listing.update({
+                where: { listingPda },
+                data: { active: false, deletedAt: new Date() },
+              }),
+              prismaQuery.sale.create({
+                data: {
+                  listingPda,
+                  assetId: listing.assetId,
+                  seller: listing.seller,
+                  buyer: user.walletAddress,
+                  priceLamports: listing.priceLamports,
+                  // Each demo sale gets a unique-ish tx sig (marker + timestamp)
+                  // to satisfy the @unique constraint on saleTxSig.
+                  saleTxSig: `${DEMO_TX_SIG.slice(0, 60)}${Date.now()}`,
+                },
+              }),
+            ]);
+          } catch (dbErr) {
+            request.log.error({ dbErr }, 'demo buy: DB transaction failed');
+            return handleError(reply, 500, 'demo buy failed', 'DEMO_BUY_FAILED', dbErr as Error);
+          }
+          return reply.code(200).send({
+            success: true,
+            error: null,
+            data: jsonSafe({
+              listingPda,
+              assetId: listing.assetId,
+              priceLamports: listing.priceLamports.toString(),
+              instantConfirmed: true,
+              txSig: DEMO_TX_SIG,
+              newOwner: user.walletAddress,
+            }),
+          });
+        }
         return handleError(reply, 502, 'DAS lookup failed', 'DAS_LOOKUP_FAILED', err as Error);
       }
 
