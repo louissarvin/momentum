@@ -276,8 +276,39 @@ export const groupRoutes: FastifyPluginCallback = (app: FastifyInstance, _opts, 
       const [vaultPda] = pdas.deriveVault(groupPda);
       const [membershipPda] = pdas.deriveMembership(groupPda, joinerPk);
 
+      // Pass 10: the on-chain program has an OPTIONAL `group_extension`
+      // account that carries the paused flag. If we blindly pass the
+      // derived PDA and it doesn't exist, Anchor errors with
+      // AccountNotInitialized (3012). We probe first and only include the
+      // account if it's actually been initialised on-chain.
+      const [groupExtPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from('group_ext'), groupPda.toBuffer()],
+        momentum.programId,
+      );
+      let groupExtensionAccount: PublicKey | null = null;
+      try {
+        const extInfo = await connection.getAccountInfo(groupExtPda);
+        if (extInfo && extInfo.owner.equals(momentum.programId)) {
+          groupExtensionAccount = groupExtPda;
+        }
+      } catch {
+        // best-effort — if the probe RPC fails, skip the optional account
+      }
+
       let ix;
       try {
+        // Anchor 0.31 optional-account convention: pass the PROGRAM ID
+        // itself as the account key when the optional account is None.
+        // On-chain, Anchor sees `program_id` at that slot and treats it
+        // as `Option::None`, skipping deserialisation.
+        //
+        // If we omit the field (or pass null), `.accountsPartial()`
+        // auto-derives the PDA from the seed constraint — which then
+        // fails with AccountNotInitialized if that PDA doesn't exist
+        // on-chain (legacy pre-Pass-10 groups). We probe whether the
+        // ext PDA exists and pass either the real key or the program ID
+        // sentinel accordingly.
+        const groupExtensionForIx = groupExtensionAccount ?? momentum.programId;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ix = await (momentum.methods as any)
           .joinGroup(new BN(groupId))
@@ -286,9 +317,17 @@ export const groupRoutes: FastifyPluginCallback = (app: FastifyInstance, _opts, 
             group: groupPda,
             vault: vaultPda,
             membership: membershipPda,
+            groupExtension: groupExtensionForIx,
             systemProgram: SystemProgram.programId,
           })
           .instruction();
+        request.log.info(
+          {
+            groupExt: groupExtensionForIx.toBase58(),
+            isSentinel: !groupExtensionAccount,
+          },
+          'join_group: ix built',
+        );
       } catch (err) {
         return handleError(reply, 500, 'failed to build join_group ix', 'IX_BUILD_FAILED', err as Error);
       }

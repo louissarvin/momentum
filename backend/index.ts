@@ -177,7 +177,14 @@ async function registerPlugins(): Promise<void> {
   await fastify.register(FastifyCors, {
     origin: env.IS_DEV ? true : allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'token', 'x-api-token'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'token',
+      'x-api-token',
+      'Idempotency-Key',
+      'X-Request-Id',
+    ],
     credentials: false,
   });
 
