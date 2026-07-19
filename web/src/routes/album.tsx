@@ -24,6 +24,109 @@ import { StickerArt } from '@/lib/sticker-art'
 
 export const Route = createFileRoute('/album')({ component: AlbumPage })
 
+// ─── Streak computation ───────────────────────────────────────────────────────
+
+interface StreakData {
+  currentStreak: number
+  longestStreak: number
+  totalHits: number
+}
+
+function computeStreaks(cards: StickerMint[]): StreakData {
+  // Sort by mintedAt descending (most recent first)
+  const sorted = [...cards].sort(
+    (a, b) => new Date(b.mintedAt).getTime() - new Date(a.mintedAt).getTime(),
+  )
+
+  let currentStreak = 0
+  let longestStreak = 0
+  let totalHits = 0
+  // Walk once: current streak = leading HITs from index 0
+  let currentDone = false
+  let runLength = 0
+
+  for (const card of sorted) {
+    const isHit = card.outcome === 'hit'
+    if (isHit) totalHits++
+
+    if (!currentDone) {
+      if (isHit) {
+        currentStreak++
+      } else {
+        currentDone = true
+      }
+    }
+
+    // Track longest anywhere in the list
+    if (isHit) {
+      runLength++
+      if (runLength > longestStreak) longestStreak = runLength
+    } else {
+      runLength = 0
+    }
+  }
+
+  return { currentStreak, longestStreak, totalHits }
+}
+
+// ─── Streak stats block ───────────────────────────────────────────────────────
+
+function StreakStats({ cards }: { cards: StickerMint[] }) {
+  const { currentStreak, longestStreak, totalHits } = computeStreaks(cards)
+  const onFire = currentStreak >= 3
+
+  const tiles = [
+    {
+      value: currentStreak,
+      label: onFire ? 'on fire' : 'current streak',
+      suffix: onFire ? ' 🔥' : '',
+      highlight: onFire,
+    },
+    {
+      value: longestStreak,
+      label: 'best streak',
+      suffix: '',
+      highlight: false,
+    },
+    {
+      value: totalHits,
+      label: 'verified predictions',
+      suffix: '',
+      highlight: false,
+    },
+  ]
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
+      {tiles.map((tile) => (
+        <div
+          key={tile.label}
+          className={cnm(
+            'p-5 rounded-[var(--radius-lg)] border',
+            'bg-ink-800 border-white/[0.08]',
+            tile.highlight && 'border-accent-500/30 bg-accent-500/[0.05]',
+          )}
+        >
+          <p
+            className={cnm(
+              'font-bold tracking-[-0.02em] mb-1',
+              'text-5xl font-display',
+              tile.highlight ? 'text-accent-500' : 'text-cream-50',
+              cards.length === 0 && 'text-slate-600',
+            )}
+          >
+            {cards.length === 0 ? '--' : tile.value}
+            {cards.length > 0 && tile.suffix}
+          </p>
+          <p className="text-xs font-mono uppercase tracking-[0.1em] text-slate-500">
+            {tile.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Filter types ─────────────────────────────────────────────────────────────
 
 type Filter = 'all' | 'hits' | 'misses'
@@ -337,6 +440,11 @@ function AlbumPage() {
               </div>
             )}
           </div>
+        </AnimateComponent>
+
+        {/* Streak stats — always rendered; shows '--' when album is empty */}
+        <AnimateComponent entry="fadeInUp" delay={40}>
+          <StreakStats cards={allCards} />
         </AnimateComponent>
 
         {/* Filter row */}
