@@ -13,12 +13,29 @@ export function useListForSale() {
   return useMutation({
     mutationFn: async (payload: { assetId: string; priceLamports: string }) => {
       const envelope = await apiPost<
-        UnsignedTxEnvelope & {
+        Partial<UnsignedTxEnvelope> & {
           assetId: string
           listingPda: string
           priceLamports: string
+          instantConfirmed?: boolean
+          txSig?: string
         }
       >('/api/marketplace/list', payload)
+
+      // Demo-mode fast path: backend already inserted the Listing row when
+      // DEMO_LISTINGS_ENABLED=true and the sticker is a seeded demo asset.
+      // Skip signAndSubmit + confirm — nothing on-chain to sign.
+      if (envelope.instantConfirmed) {
+        return {
+          txSig: envelope.txSig ?? 'demo',
+          listingPda: envelope.listingPda,
+          confirmed: { listing: envelope },
+        }
+      }
+
+      if (!envelope.unsignedTx || !envelope.recentBlockhash || !envelope.lastValidBlockHeight) {
+        throw new Error('Backend did not return a signable transaction')
+      }
 
       const { txSig } = await signAndSubmit(
         connection,
@@ -53,7 +70,32 @@ export function useBuyCard() {
 
   return useMutation({
     mutationFn: async (listingPda: string) => {
-      const envelope = await marketplaceApi.buy(listingPda)
+      const envelope = (await marketplaceApi.buy(listingPda)) as {
+        unsignedTx?: string
+        recentBlockhash?: string
+        lastValidBlockHeight?: number
+        assetId?: string
+        priceLamports?: string
+        instantConfirmed?: boolean
+        txSig?: string
+        newOwner?: string
+      }
+
+      // Demo-mode fast path: backend performed the DB transfer directly.
+      // Skip signAndSubmit + confirm.
+      if (envelope.instantConfirmed) {
+        return {
+          txSig: envelope.txSig ?? 'demo',
+          listingPda,
+          assetId: envelope.assetId,
+          priceLamports: envelope.priceLamports,
+          newOwner: envelope.newOwner,
+        }
+      }
+
+      if (!envelope.unsignedTx || !envelope.recentBlockhash || !envelope.lastValidBlockHeight) {
+        throw new Error('Backend did not return a signable transaction')
+      }
 
       const { txSig } = await signAndSubmit(
         connection,

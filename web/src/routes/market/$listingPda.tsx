@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { AlertTriangle, ArrowLeft, ExternalLink } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ExternalLink, Loader2 } from 'lucide-react'
 import {
   Button,
   Modal,
@@ -126,71 +126,139 @@ function BuyModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="sm"
+      size="md"
+      backdrop="blur"
+      placement="center"
       classNames={{
-        backdrop: 'bg-ink-900/72 backdrop-blur-[6px]',
-        base: 'bg-ink-800 border border-white/[0.08] rounded-[var(--radius-2xl)]',
-        header:
-          'text-cream-50 font-semibold text-lg border-b border-white/[0.06]',
-        body: 'py-6',
-        footer: 'border-t border-white/[0.06]',
+        backdrop: 'bg-ink-900/70 backdrop-blur-[6px]',
+        base: 'bg-ink-800 border border-white/[0.08] rounded-[var(--radius-2xl)] mx-4 max-w-[480px]',
+        header: 'px-6 pt-6 pb-0 border-b-0',
+        body: 'px-6 py-6',
+        footer: 'px-6 py-4 border-t border-white/[0.06] bg-ink-900/40',
+        closeButton:
+          'top-4 right-4 text-slate-500 hover:text-cream-50 hover:bg-white/[0.06] rounded-full transition-colors',
       }}
     >
       <ModalContent>
-        <ModalHeader>Buy Sticker</ModalHeader>
+        <ModalHeader className="flex flex-col gap-1.5">
+          <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-accent-500">
+            Buy sticker
+          </p>
+          <h2 className="text-cream-50 font-bold text-2xl tracking-tight">
+            Confirm purchase
+          </h2>
+          <p className="text-slate-400 text-sm font-normal leading-relaxed">
+            Signs a `buy_card` instruction on Solana. Sticker transfers to your wallet, seller receives SOL, all in one atomic transaction.
+          </p>
+        </ModalHeader>
+
         <ModalBody>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-400">Card</p>
-                <p className="text-cream-50 font-semibold">{name}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-slate-400">Price</p>
-                <p className="font-mono text-xl font-bold text-accent-500">
-                  {priceSOL.toFixed(3)} SOL
-                </p>
+          <div className="space-y-4">
+            {/* Sticker + price summary card */}
+            <div className="rounded-[var(--radius-md)] bg-ink-900/60 border border-white/[0.06] p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500 mb-1">
+                    Card
+                  </p>
+                  <p className="text-cream-50 font-semibold text-base truncate">
+                    {name}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500 mb-1">
+                    Price
+                  </p>
+                  <p className="font-mono text-2xl font-bold text-accent-500 leading-none">
+                    {priceSOL.toFixed(3)}
+                  </p>
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mt-1">
+                    SOL
+                  </p>
+                </div>
               </div>
             </div>
 
+            {/* Cost breakdown */}
+            <div className="rounded-[var(--radius-md)] bg-ink-900/40 border border-white/[0.04] p-4 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-mono uppercase tracking-widest">
+                  Sticker price
+                </span>
+                <span className="text-cream-50 font-mono">
+                  {priceSOL.toFixed(3)} SOL
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-mono uppercase tracking-widest">
+                  Network fee
+                </span>
+                <span className="text-slate-400 font-mono">~0.00001 SOL</span>
+              </div>
+              <div className="h-px bg-white/[0.06] my-1"></div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-cream-50 font-semibold">Total</span>
+                <span className="font-mono text-cream-50 font-semibold">
+                  {(priceSOL + 0.00001).toFixed(5)} SOL
+                </span>
+              </div>
+            </div>
+
+            {/* Auth warning */}
             {!isAuthenticated && (
-              <div className="flex items-start gap-2 px-3 py-2 rounded-[var(--radius-md)] bg-warning-500/10 border border-warning-500/20">
+              <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-[var(--radius-md)] bg-warning-500/[0.08] border border-warning-500/25">
                 <AlertTriangle
-                  size={14}
+                  size={16}
                   strokeWidth={1.75}
                   className="text-warning-500 mt-0.5 shrink-0"
                 />
-                <p className="text-warning-500 text-xs">
-                  You need to connect and authenticate your wallet to buy.
+                <p className="text-warning-500 text-xs leading-relaxed">
+                  Connect + sign in with your wallet to complete this purchase.
                 </p>
               </div>
             )}
 
+            {/* Error surface */}
             {buyMutation.isError && (
-              <p className="text-error-500 text-xs font-mono">
-                {buyMutation.error instanceof Error
-                  ? buyMutation.error.message
-                  : 'Buy failed'}
-              </p>
+              <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-[var(--radius-md)] bg-error-500/[0.08] border border-error-500/25">
+                <AlertTriangle
+                  size={16}
+                  strokeWidth={1.75}
+                  className="text-error-500 mt-0.5 shrink-0"
+                />
+                <p className="text-error-500 text-xs font-mono leading-relaxed break-all">
+                  {buyMutation.error instanceof Error
+                    ? buyMutation.error.message
+                    : 'Buy failed — please try again.'}
+                </p>
+              </div>
             )}
           </div>
         </ModalBody>
-        <ModalFooter className="gap-2">
-          <Button
-            variant="bordered"
-            onPress={onClose}
-            className="rounded-full border-white/[0.1] text-slate-400 hover:text-cream-50"
+
+        <ModalFooter className="flex items-center justify-between gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 h-10 rounded-full text-slate-400 text-sm font-medium hover:text-cream-50 hover:bg-white/[0.04] transition-colors"
           >
             Cancel
-          </Button>
-          <Button
-            onPress={handleConfirm}
-            isDisabled={!publicKey || !isAuthenticated || buyMutation.isPending}
-            isLoading={buyMutation.isPending}
-            className="rounded-full bg-accent-500 text-ink-900 font-semibold hover:bg-accent-600 focus-ring"
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!publicKey || !isAuthenticated || buyMutation.isPending}
+            className={cnm(
+              'inline-flex items-center gap-2 px-6 h-10 rounded-full text-sm font-semibold',
+              'transition-all duration-150 focus-ring active:scale-[0.97]',
+              !publicKey || !isAuthenticated || buyMutation.isPending
+                ? 'bg-accent-500/30 text-ink-900/50 cursor-not-allowed'
+                : 'bg-accent-500 text-ink-900 hover:bg-accent-600 shadow-[0_4px_16px_rgba(249,115,22,0.25)]',
+            )}
           >
-            {buyMutation.isPending ? 'Signing…' : 'Confirm buy'}
-          </Button>
+            {buyMutation.isPending && (
+              <Loader2 size={14} strokeWidth={1.75} className="animate-spin" />
+            )}
+            {buyMutation.isPending ? 'Confirming…' : `Buy for ${priceSOL.toFixed(3)} SOL`}
+          </button>
         </ModalFooter>
       </ModalContent>
     </Modal>
